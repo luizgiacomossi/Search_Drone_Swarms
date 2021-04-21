@@ -4,7 +4,7 @@ from constants import *
 import random 
 import copy
 from state_machine import FiniteStateMachine, SeekState, StayAtState, OvalState, Eight2State, ScanState
-import threading # multithread
+from utils import FlowField
 
 vec2 = pygame.math.Vector2
 ##=========================
@@ -14,10 +14,7 @@ font20 = pygame.font.SysFont(None, 20)
 font24 = pygame.font.SysFont(None, 24)
 size = SCREEN_WIDTH, SCREEN_HEIGHT 
 clock = pygame.time.Clock()
-#bakcground
-#bg = pygame.image.load("texture/Grass_01.png")
-#bg = pygame.transform.scale(bg, (SCREEN_WIDTH, SCREEN_HEIGHT))
-#bg.set_alpha(50)
+
 
 screen = pygame.display.set_mode(size)
 # defines initial target
@@ -27,6 +24,9 @@ target = vec2(SCREEN_WIDTH/2, SCREEN_HEIGHT/2)
 behaviors =[] 
 # Current simulations 
 simulations = []
+
+#create flow field
+flow_field = FlowField(RESOLUTION)
 
 # Create N simultaneous Drones
 for d in range(0, NUM_DRONES):
@@ -68,7 +68,9 @@ while run:
 
     # Background
     screen.fill(LIGHT_BLUE)
-    #screen.blit(bg, (0,0))
+
+    # draw grid
+    flow_field.draw(screen)
 
     # draws target as a circle on screen
     pygame.draw.circle(screen, (100, 100, 100), target, RADIUS_TARGET, 2)
@@ -86,9 +88,15 @@ while run:
         # writes drone id
         img = font20.render(f'Drone {index}', True, BLUE)
         screen.blit(img, _.get_position()+(0,20))
-        # writes drone actual behavior
+        # writes drone current behavior
         img = font20.render(_.behavior.get_current_state(), True, BLUE)
         screen.blit(img, _.get_position()+(0,30))
+        # writes drone current position in column and row
+        p = _.get_position()
+        col =  int(p.x/RESOLUTION) + 1
+        row = int(p.y/RESOLUTION) + 1
+        img = font20.render(f'Pos:{col},{row}', True, BLUE)
+        screen.blit(img, _.get_position()+(0,40))
 
     # Writes the App name in screen
     img = font24.render('Paparazzi Mobility Model', True, BLUE)

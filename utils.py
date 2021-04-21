@@ -3,6 +3,7 @@ import pygame as pg
 from math import atan2, pi
 import random
 import copy 
+import numpy as np
 vec = pg.math.Vector2 
 
 def random_color():
@@ -96,4 +97,24 @@ class Aircraft(pg.sprite.Sprite):
         self.rect = self.image.get_rect()
         # positions center of rect in acual drone position
         self.rect.center = position.x,position.y
+
+class FlowField():
+    def __init__(self, resolution):
+        
+        self.cols =int(SCREEN_WIDTH/resolution)  # Columns of the grid
+        self.rows = int(SCREEN_HEIGHT/resolution)  # Rows of the grid
+        self.resolution = resolution # Resolution of grid relative to window width and height in pixels
+
+        self.field = [[vec(random.uniform(0,1),random.uniform(0,1)) for col in range(self.cols)] for row in range(self.rows)] # create matrix 
+        
+    def draw(self, screen):
+
+        blockSize = self.resolution #Set the size of the grid block
+        print(self.cols,self.rows)
+        for x in range(0, SCREEN_WIDTH, blockSize):
+            for y in range(0, SCREEN_HEIGHT, blockSize):
+                rect = pg.Rect(x, y, blockSize, blockSize)
+                pg.draw.rect(screen, (200,200,200), rect, 1)
+
+
 

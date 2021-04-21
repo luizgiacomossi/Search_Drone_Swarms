@@ -6,7 +6,7 @@ M2PIX = 100.0  # factor to convert from meters to pixels
 NUM_DRONES = 1 # Number of simultaneous drones
 SIZE_DRONE = 18
 SIZE_TRACK = 600
-
+RESOLUTION = 100 # Of grid
 # Sample Time Parameters
 FREQUENCY = 60.0  # simulation frequency
 SAMPLE_TIME = 1.0 / FREQUENCY  # simulation sample time

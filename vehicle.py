@@ -285,7 +285,7 @@ class Vehicle():
         self.all_sprites.draw(self.window)
         self.all_sprites.update(self.location,self.rotation)
 
-#---- these methods were not used in this project
+ #---- these methods were not used in this project
     def collision_avoidance(self, all_positions, index):
         """
             Not working yet
@@ -313,3 +313,5 @@ class Vehicle():
             self.velocity.y *= -1
 
         self.location += self.velocity
+
+
