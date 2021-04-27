@@ -7,7 +7,7 @@ import copy
 
 vec2 = pg.math.Vector2
 
-class Vehicle():
+class Vehicle(object):
     def __init__(self, x,y, behavior, window):
         """
             idealized vehicle representing a drone
@@ -262,8 +262,10 @@ class Vehicle():
         # aux != index -> avoids the auto-collision check
             if ((self.location - p.location).length() < AVOID_DISTANCE) and aux != index:
                 self.velocity *= - 20 # arbitrary factor that defines how strong is the impact
+                #self.velocity = 20*vec2(-self.velocity.x, self.velocity.y)
+                #p.velocity = 20*vec2(p.velocity.x,-p.velocity.y)
                 #self.applyForce(vec2(-self.max_force,-self.max_force))
-                break
+                return 1
             aux+=1
   
     def draw(self, window):
@@ -273,13 +275,15 @@ class Vehicle():
         """
 
         # draws track
-        if len(self.memory_location) >= 2:
-            pg.draw.lines(self.window, self.color_target, False, self.memory_location, 1)
-
   
         # Drawing drone's outer circle as a hitbox?
         if self.debug == True:
             pg.draw.circle(self.window, (100, 100, 100), self.location, AVOID_DISTANCE, 1)
+            if len(self.memory_location) >= 2:
+                pg.draw.lines(self.window, self.color_target, False, self.memory_location, 1)
+
+            pg.draw.line(self.window, (100, 100, 100), self.location, self.location+self.desired , 1)
+
 
         # usar sprite para desenhar drone
         self.all_sprites.draw(self.window)
@@ -314,4 +318,6 @@ class Vehicle():
 
         self.location += self.velocity
 
-
+    # Deleting (Calling destructor)
+    def __del__(self):
+        print('Drone Deleted')

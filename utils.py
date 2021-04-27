@@ -48,11 +48,11 @@ def constrain(v2,w,h):
         :rtype v2: vector2
     """
     if v2.x > w:
-        v2.x = w
+        v2.x = 0
     if v2.x < 0:
         v2.x = 0 
     if v2.y > h:
-        v2.y = h
+        v2.y = 0
     if v2.y < 0:
         v2.y = 0
     return v2
@@ -100,7 +100,7 @@ class Aircraft(pg.sprite.Sprite):
 
 class FlowField():
     def __init__(self, resolution):
-        
+
         self.cols =int(SCREEN_WIDTH/resolution)  # Columns of the grid
         self.rows = int(SCREEN_HEIGHT/resolution)  # Rows of the grid
         self.resolution = resolution # Resolution of grid relative to window width and height in pixels
@@ -110,7 +110,7 @@ class FlowField():
     def draw(self, screen):
 
         blockSize = self.resolution #Set the size of the grid block
-        print(self.cols,self.rows)
+        #print(self.cols,self.rows)
         for x in range(0, SCREEN_WIDTH, blockSize):
             for y in range(0, SCREEN_HEIGHT, blockSize):
                 rect = pg.Rect(x, y, blockSize, blockSize)

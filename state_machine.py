@@ -134,7 +134,7 @@ class StayAtState(State):
             self.sequence = 0 # reinicia movimento
 
         # Arbitrary runtime transition-> next state is random
-        if self.time_executing > 600:
+        if self.time_executing > 6000:
             next_state = get_random_state()
             if next_state == 'SeekState':
                 state_machine.change_state(SeekState())  

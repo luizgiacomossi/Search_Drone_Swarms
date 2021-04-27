@@ -17,7 +17,7 @@ ANGULAR_SPEED = 1.5# default angular speed
 SEEK_FORCE = 0.2 # max seek force
 RADIUS_TARGET = 130 
 MASS = 1 # Drone Mass, used to calculate force
-HOP_AHEAD = 20 # distance of prevision
+HOP_AHEAD = 60 # distance of prevision
 AVOID_DISTANCE = 30 # distance to avoid collision
 
 # Colors
