@@ -30,7 +30,7 @@ flow_field = FlowField(RESOLUTION)
 
 # Create N simultaneous Drones
 for d in range(0, NUM_DRONES):
-    behaviors.append( FiniteStateMachine( StayAtState() ) ) # Inicial state
+    behaviors.append( FiniteStateMachine( SeekState() ) ) # Inicial state
     drone = Vehicle(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, behaviors[-1], screen)
     drone.set_target(vec2(SCREEN_WIDTH/2, SCREEN_HEIGHT/2))
     simulations.append(drone)
@@ -61,7 +61,7 @@ while run:
 
             # right button - New Drone
             if pygame.mouse.get_pressed()[2] == True:              
-                behaviors.append( FiniteStateMachine( StayAtState() ) )
+                behaviors.append( FiniteStateMachine( SeekState() ) )
                 drone = Vehicle(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, behaviors[-1], screen)
                 drone.set_target(vec2(pygame.mouse.get_pos()[0],pygame.mouse.get_pos()[1]))
                 simulations.append(drone)
@@ -70,7 +70,7 @@ while run:
     screen.fill(LIGHT_BLUE)
 
     # draw grid
-    flow_field.draw(screen)
+    #flow_field.draw(screen)
 
     # draws target as a circle on screen
     pygame.draw.circle(screen, (100, 100, 100), target, RADIUS_TARGET, 2)
@@ -82,11 +82,11 @@ while run:
         d = _.check_collision(simulations,index) 
         #if d == 1:
             #simulations.pop(index)
-
         ## collision avoindance is not implemented yet
         #_.collision_avoidance(simulations,index)
-        _.draw(screen) 
         _.update()
+        _.draw(screen) 
+        
         index += 1
         # writes drone id
         img = font20.render(f'Drone {index}', True, BLUE)

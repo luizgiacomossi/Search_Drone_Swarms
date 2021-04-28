@@ -88,19 +88,19 @@ class SeekState(State):
             agent.set_target(None)
             self.sequence = 0 # reinicia movimento
 
-        #chegou ao waypoint
-        if self.finished == True:
-            next_state = get_random_state()
-            if next_state == 'SeekState':
-                state_machine.change_state(SeekState())  
-            elif next_state == 'StayAtState':
-                state_machine.change_state(StayAtState())  
-            elif next_state == 'Eight2State':
-                state_machine.change_state(Eight2State())  
-            elif next_state == 'OvalState':
-                state_machine.change_state(OvalState())  
-            elif next_state == 'ScanState':
-                state_machine.change_state(ScanState())  
+        # chegou ao waypoint
+        # if self.finished == True:
+        #     next_state = get_random_state()
+        #     if next_state == 'SeekState':
+        #         state_machine.change_state(SeekState())  
+        #     elif next_state == 'StayAtState':
+        #         state_machine.change_state(StayAtState())  
+        #     elif next_state == 'Eight2State':
+        #         state_machine.change_state(Eight2State())  
+        #     elif next_state == 'OvalState':
+        #         state_machine.change_state(OvalState())  
+        #     elif next_state == 'ScanState':
+        #         state_machine.change_state(ScanState())  
              
     def execute(self, agent):
         # logic to move drone to target
@@ -109,7 +109,7 @@ class SeekState(State):
         except:
             self.target = agent.get_position()
 
-        agent.arrive(self.target)
+        agent.seek(self.target)
         self.time_executing +=1
         if (self.target - agent.location).length() < 10 and self.time_executing > 300:
             self.finished = True

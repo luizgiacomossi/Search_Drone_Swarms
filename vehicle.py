@@ -257,17 +257,32 @@ class Vehicle(object):
         """
         # gets all positions of simultaneos drones
         aux = 0 
+        soma = vec2(0,0)
+        count = 0 # counts the number of drones that are close
         for p in all_positions:
         # compares current position to all the drones
         # aux != index -> avoids the auto-collision check
-            if ((self.location - p.location).length() < AVOID_DISTANCE) and aux != index:
-                self.velocity *= - 20 # arbitrary factor that defines how strong is the impact
-                #self.velocity = 20*vec2(-self.velocity.x, self.velocity.y)
-                #p.velocity = 20*vec2(p.velocity.x,-p.velocity.y)
-                #self.applyForce(vec2(-self.max_force,-self.max_force))
-                return 1
+            d = (self.location - p.location).length()
+            if ( (d > 0) and (d < AVOID_DISTANCE*2) and (aux != index) ) :
+                #self.velocity *= - 20 # arbitrary factor that defines how strong is the impact
+                diff = (self.location - p.location).normalize()
+                diff = diff/d # proporcional to the distance. The closer the stronger needs to be
+                soma += diff
+                count += 1 # p drone is close 
+                #self.applyForce(diff - self.velocity)
+                #return 1
             aux+=1
-  
+        if count > 0:
+            soma = soma / count
+            soma = soma.normalize()
+            soma *= self.max_speed
+            steer = soma - self.velocity
+            steer = limit(steer,self.max_force)
+            self.applyForce(steer)
+            return 1
+        else:
+            return 0
+            
     def draw(self, window):
 
         """

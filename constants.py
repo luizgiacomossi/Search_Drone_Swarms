@@ -14,11 +14,11 @@ SAMPLE_TIME = 1.0 / FREQUENCY  # simulation sample time
 # Behavior Parameters
 FORWARD_SPEED = 3  # default linear speed when going forward
 ANGULAR_SPEED = 1.5# default angular speed
-SEEK_FORCE = 0.2 # max seek force
+SEEK_FORCE = 0.1 # max seek force
 RADIUS_TARGET = 130 
 MASS = 1 # Drone Mass, used to calculate force
 HOP_AHEAD = 60 # distance of prevision
-AVOID_DISTANCE = 30 # distance to avoid collision
+AVOID_DISTANCE = 40 # distance to avoid collision
 
 # Colors
 BLACK = (0,0,0)

@@ -34,6 +34,21 @@ def limit(v2, max):
         v.scale_to_length(max)
     return v
 
+def limit3d(v3, max):
+    """
+        Limits magnitude of vector2
+
+        :param v2: Vector2 to be normalized
+        :type v2: pygame.Vector2
+        :param max: maximum length of vector
+        :type max: int
+        :return v: returns vector 
+        :rtype v: vector2
+    """
+    v = copy.deepcopy(v3)
+    if v.length() > max:
+        v.scale_to_length(max)
+    return v
 def constrain(v2,w,h):
     """
         Constrains movement of drone inside the canvas
@@ -56,6 +71,33 @@ def constrain(v2,w,h):
     if v2.y < 0:
         v2.y = 0
     return v2
+
+def constrain3d(v3,w,h,alt):
+    """
+        Constrains movement of drone inside the canvas
+
+        :param v2: Vector2 to be constrained
+        :type v2: pygame.Vector2
+        :param w: maximum width
+        :type w: int
+        :param h: maximum height
+        :type h: int
+        :return v2: returns vector within the limits
+        :rtype v2: vector2
+    """
+    if v3.x > w:
+        v3.x = w
+    if v3.x < -w:
+        v3.x = -w 
+    if v3.y > alt:
+        v3.y = alt
+    if v3.y < 0.1:
+        v3.y = 0.1
+    if v3.z > h:
+        v3.z = h
+    if v3.z < -h:
+        v3.z = -h
+    return v3
 
 class Aircraft(pg.sprite.Sprite):
     """
