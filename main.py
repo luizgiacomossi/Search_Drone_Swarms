@@ -15,7 +15,6 @@ font24 = pygame.font.SysFont(None, 24)
 size = SCREEN_WIDTH, SCREEN_HEIGHT 
 clock = pygame.time.Clock()
 
-
 screen = pygame.display.set_mode(size)
 # defines initial target
 target = vec2(SCREEN_WIDTH/2, SCREEN_HEIGHT/2)
@@ -83,7 +82,7 @@ while run:
         #if d == 1:
             #simulations.pop(index)
         ## collision avoindance is not implemented yet
-        #_.collision_avoidance(simulations,index)
+        _.collision_avoidance(simulations,index)
         _.update()
         _.draw(screen) 
         

@@ -6,6 +6,13 @@ import copy
 import numpy as np
 vec = pg.math.Vector2 
 
+def constrain_ang(ang,min,max):
+    if ang > max:
+        ang = max
+    if ang < min:
+        ang = min
+    return ang
+
 def random_color():
     """"
         Picks a random color R,G or B
@@ -47,8 +54,10 @@ def limit3d(v3, max):
     """
     v = copy.deepcopy(v3)
     if v.length() > max:
-        v.scale_to_length(max)
+        v /= v.length()
+        v *= max
     return v
+    
 def constrain(v2,w,h):
     """
         Constrains movement of drone inside the canvas
@@ -91,8 +100,8 @@ def constrain3d(v3,w,h,alt):
         v3.x = -w 
     if v3.y > alt:
         v3.y = alt
-    if v3.y < 0.1:
-        v3.y = 0.1
+    if v3.y < 0.2:
+        v3.y = 0.2
     if v3.z > h:
         v3.z = h
     if v3.z < -h:
@@ -109,7 +118,7 @@ class Aircraft(pg.sprite.Sprite):
         self.sprites = []
 
         for i in range(0,4):
-            self.sprites.append(pg.image.load(f'Drone5/sprite_{i}.png'))
+            self.sprites.append(pg.image.load(f'models/Drone5/sprite_{i}.png'))
 
         self.atual = 0
         # inherited from the pygame sprite class it is the first element of the drone

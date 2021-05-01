@@ -250,7 +250,7 @@ class Vehicle(object):
     def get_debug(self):
         return str(self.debug)
 
-    def check_collision(self, all_positions, index):
+    def collision_avoidance(self, all_positions, index):
         """
          This method checks if the drone is colliding with another 
          drone during simulation it receives all the positions from all drones
@@ -263,7 +263,8 @@ class Vehicle(object):
         # compares current position to all the drones
         # aux != index -> avoids the auto-collision check
             d = (self.location - p.location).length()
-            if ( (d > 0) and (d < AVOID_DISTANCE*2) and (aux != index) ) :
+            separation_factor = 2.2
+            if ( (d > 0) and (d < AVOID_DISTANCE*separation_factor) and (aux != index) ) :
                 #self.velocity *= - 20 # arbitrary factor that defines how strong is the impact
                 diff = (self.location - p.location).normalize()
                 diff = diff/d # proporcional to the distance. The closer the stronger needs to be
@@ -305,17 +306,19 @@ class Vehicle(object):
         self.all_sprites.update(self.location,self.rotation)
 
  #---- these methods were not used in this project
-    def collision_avoidance(self, all_positions, index):
+    def check_collision(self, all_positions, index):
         """
             Not working yet
         """
         aux = 0 
         for p in all_positions:
-            if ((self.location - p.location).length() < AVOID_DISTANCE) and (aux != index):
-                desired = vec2(self.max_speed, self.velocity.y)
-                steer = desired - self.velocity
-                steer = limit(steer, self.max_force)
-                self.applyForce(steer)
+            d = (self.location - p.location).length()
+            factor_distance = 2
+            if ( d < AVOID_DISTANCE*factor_distance )  and (aux != index):
+                #a = self.velocity.lerp(vec2(-0.2,-0.2), d/(AVOID_DISTANCE))
+                #f = (self.velocity.lerp(vec2(0.1,0.1), d/(AVOID_DISTANCE)) - self.velocity )/ SAMPLE_TIME
+                self.velocity *= d/(AVOID_DISTANCE*factor_distance)
+                #self.applyForce(f*0.01)
                 print(f'Alerta de colisão drone {index} com drone {aux}')
                 break
             aux +=1

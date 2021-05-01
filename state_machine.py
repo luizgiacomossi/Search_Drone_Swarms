@@ -109,8 +109,9 @@ class SeekState(State):
         except:
             self.target = agent.get_position()
 
-        agent.seek(self.target)
+        agent.arrive(self.target)
         self.time_executing +=1
+
         if (self.target - agent.location).length() < 10 and self.time_executing > 300:
             self.finished = True
 
