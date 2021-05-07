@@ -252,8 +252,9 @@ class Vehicle(object):
 
     def collision_avoidance(self, all_positions, index):
         """
-         This method checks if the drone is colliding with another 
-         drone during simulation it receives all the positions from all drones
+         This method avoids collisions with oter drones
+         During simulation it receives all the positions from all drones 
+         index: is the current id of drone being checked 
         """
         # gets all positions of simultaneos drones
         aux = 0 
@@ -306,7 +307,7 @@ class Vehicle(object):
 
     def check_collision(self, positions_drones , pos_obstacles , index):
         """
-            Not working yet
+            Not working yet, it should detect obstacles and collision with other drones
         """
         # check drones
         f = 1

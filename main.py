@@ -29,8 +29,11 @@ simulations = []
 list_obst = []
 obst = Obstacles(10, (SCREEN_WIDTH,SCREEN_HEIGHT))
 obst.generate_obstacles()
+# TTo generate obstacles, uncomment following command
 #list_obst = obst.get_coordenates()
-#create flow field
+
+
+#create flow field - not used neither fully implemented, flow field can be used as wind
 #flow_field = FlowField(RESOLUTION)
 
 # Create N simultaneous Drones
@@ -87,14 +90,12 @@ while run:
     for _ in simulations:
         # checks if drones colided with eachother
 
-        #if d == 1:
-            #simulations.pop(index)
         ## collision avoindance is not implemented yet
         _.collision_avoidance(simulations,index)
         _.check_collision(simulations,list_obst,index) 
         _.update()
         _.draw(screen) 
-        
+        # index to keep track of  drone in the list
         index += 1
         # writes drone id
         img = font20.render(f'Drone {index}', True, BLUE)
