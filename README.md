@@ -1,9 +1,12 @@
-# paparazzi_python
+# Busca com Swarm de drones
+
+Este projeto é referente ao projeto final da disciplina de Simulação de drones SC-249/2021 do ITA - Instituto Tecnológico de Aeronáutica
 
 Para execução do programa é necessário:
 
 - PYTHON
-
+- VSCode ou algum outro editor de código
+- 
 Dependencias: 
 
 - PYGAME -> https://www.pygame.org/wiki/GettingStarted
