@@ -62,7 +62,7 @@ class Vehicle(object):
         # updates position
         self.location += self.velocity 
         # Prevents it from crazy spinning due to very low noise speeds
-        if self.velocity.length() > 0.5:
+        if self.velocity.length() > 0.8:
             self.rotation = atan2(self.velocity.y,self.velocity.x)
         # Constrains position to limits of screen 
         self.location = constrain(self.location,SCREEN_WIDTH,SCREEN_HEIGHT)
@@ -257,33 +257,31 @@ class Vehicle(object):
         """
         # gets all positions of simultaneos drones
         aux = 0 
-        soma = vec2(0,0)
+        soma = vec2(0,0) # sums up all directions of close drones
         count = 0 # counts the number of drones that are close
         for p in all_positions:
         # compares current position to all the drones
         # aux != index -> avoids the auto-collision check
-            d = (self.location - p.location).length()
+            d = (self.location - p.location).magnitude()
             separation_factor = 2.2
             if ( (d > 0) and (d < AVOID_DISTANCE*separation_factor) and (aux != index) ) :
-                #self.velocity *= - 20 # arbitrary factor that defines how strong is the impact
                 diff = (self.location - p.location).normalize()
                 diff = diff/d # proporcional to the distance. The closer the stronger needs to be
                 soma += diff
                 count += 1 # p drone is close 
-                #self.applyForce(diff - self.velocity)
                 #return 1
             aux+=1
-        if count > 0:
-            soma = soma / count
-            soma = soma.normalize()
-            soma *= self.max_speed
-            steer = soma - self.velocity
-            steer = limit(steer,self.max_force)
-            self.applyForce(steer)
-            return 1
-        else:
-            return 0
             
+        if count > 0:
+            media = soma / count
+            media = media.normalize()
+            media *= self.max_speed
+            steer = (media - self.velocity)
+            steer = limit(steer,self.max_force)
+            #----
+            #----
+            self.applyForce(steer)
+                  
     def draw(self, window):
 
         """
@@ -298,31 +296,52 @@ class Vehicle(object):
             if len(self.memory_location) >= 2:
                 pg.draw.lines(self.window, self.color_target, False, self.memory_location, 1)
 
-            pg.draw.line(self.window, (100, 100, 100), self.location, self.location+self.desired , 1)
-
+            #pg.draw.line(self.window, (100, 100, 100), self.location, self.location+self.desired , 1)
+            # Draw Direction
+            pg.draw.line(self.window, (100, 100, 100), self.location, self.location + self.velocity.normalize()*50 , 1)
 
         # usar sprite para desenhar drone
         self.all_sprites.draw(self.window)
         self.all_sprites.update(self.location,self.rotation)
 
- #---- these methods were not used in this project
-    def check_collision(self, all_positions, index):
+    def check_collision(self, positions_drones , pos_obstacles , index):
         """
             Not working yet
         """
+        # check drones
+        f = 1
         aux = 0 
-        for p in all_positions:
+        for p in positions_drones:
             d = (self.location - p.location).length()
-            factor_distance = 2
-            if ( d < AVOID_DISTANCE*factor_distance )  and (aux != index):
-                #a = self.velocity.lerp(vec2(-0.2,-0.2), d/(AVOID_DISTANCE))
-                #f = (self.velocity.lerp(vec2(0.1,0.1), d/(AVOID_DISTANCE)) - self.velocity )/ SAMPLE_TIME
-                self.velocity *= d/(AVOID_DISTANCE*factor_distance)
-                #self.applyForce(f*0.01)
+            factor_distance = 1.8
+            dist_avoid = AVOID_DISTANCE*factor_distance
+            if ( d < dist_avoid )  and (aux != index):
+                f = (self.velocity - self.velocity.normalize()*self.max_speed )/ SAMPLE_TIME
+                f = limit(f,self.max_force)
+                #self.velocity *= d/(AVOID_DISTANCE*factor_distance)
+
+                self.applyForce(f)
                 print(f'Alerta de colisão drone {index} com drone {aux}')
                 break
             aux +=1
+        # check obstacles 
 
+        for p in pos_obstacles:
+            d = (self.location - p).length()
+            factor_distance = 1.3
+            dist_avoid = 100 * factor_distance
+            if ( d < dist_avoid ) :
+                diff = (self.location - p).normalize()
+                #f = -self.velocity/ SAMPLE_TIME
+                diff *= self.max_speed
+                steer = (diff - self.velocity)
+                steer = limit(steer,self.max_force)
+            #----
+            #----
+                self.applyForce(steer)
+                #self.velocity *= d/(AVOID_DISTANCE*factor_distance)
+                #self.applyForce(f)
+           
     def bouncing(self):
         """
             Bouncing Behavior

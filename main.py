@@ -5,6 +5,7 @@ import random
 import copy
 from state_machine import FiniteStateMachine, SeekState, StayAtState, OvalState, Eight2State, ScanState
 from utils import FlowField
+from obstacle import Obstacles
 
 vec2 = pygame.math.Vector2
 ##=========================
@@ -24,8 +25,13 @@ behaviors =[]
 # Current simulations 
 simulations = []
 
+# Generates obstacles
+list_obst = []
+obst = Obstacles(10, (SCREEN_WIDTH,SCREEN_HEIGHT))
+obst.generate_obstacles()
+list_obst = obst.get_coordenates()
 #create flow field
-flow_field = FlowField(RESOLUTION)
+#flow_field = FlowField(RESOLUTION)
 
 # Create N simultaneous Drones
 for d in range(0, NUM_DRONES):
@@ -67,7 +73,9 @@ while run:
 
     # Background
     screen.fill(LIGHT_BLUE)
-
+    # Draws obstacles:
+    for _ in list_obst:
+         pygame.draw.circle(screen,(100, 100, 100), _, radius=80)
     # draw grid
     #flow_field.draw(screen)
 
@@ -78,11 +86,12 @@ while run:
     index = 0 # index is used to track current drone in the simulation list
     for _ in simulations:
         # checks if drones colided with eachother
-        d = _.check_collision(simulations,index) 
+
         #if d == 1:
             #simulations.pop(index)
         ## collision avoindance is not implemented yet
         _.collision_avoidance(simulations,index)
+        _.check_collision(simulations,list_obst,index) 
         _.update()
         _.draw(screen) 
         
