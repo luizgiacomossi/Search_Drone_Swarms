@@ -23,6 +23,7 @@ Descrição dos Arquivos
 	utils.py 	 - Funções uteis utilizadas
 	constants.py 	 - paramentros para a simulação
 	state_machine.py - Implementação da Maquina de estados e dos behaviors paparazzi
-	vehicle.py	 - Implementação da lógica do veiculo (drone) e seus movimentos 			 básicos
+	vehicle.py	 - Implementação da lógica do veiculo (drone) e seus movimentos básicos
+	obstacle.py  	 - Lógica da geraçao de obstaculos
 
 A pasta model contem sprites utilizadas para animação do drone
