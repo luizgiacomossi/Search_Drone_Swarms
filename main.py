@@ -29,7 +29,7 @@ simulations = []
 list_obst = []
 obst = Obstacles(10, (SCREEN_WIDTH,SCREEN_HEIGHT))
 obst.generate_obstacles()
-list_obst = obst.get_coordenates()
+#list_obst = obst.get_coordenates()
 #create flow field
 #flow_field = FlowField(RESOLUTION)
 
