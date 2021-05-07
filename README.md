@@ -1,8 +1,11 @@
-# paparazzi_python
+# Busca com Swarm de drones
+
+Este projeto é referente ao projeto final da disciplina de Simulação de drones SC-249/2021 do ITA - Instituto Tecnológico de Aeronáutica
 
 Para execução do programa é necessário:
 
 - PYTHON
+- VSCode ou algum outro editor de código
 
 Dependencias: 
 
@@ -22,4 +25,4 @@ Descrição dos Arquivos
 	state_machine.py - Implementação da Maquina de estados e dos behaviors paparazzi
 	vehicle.py	 - Implementação da lógica do veiculo (drone) e seus movimentos 			 básicos
 
-As pastas drone e aircraft se referem a sprites utilizadas para animação do drone
+A pasta model contem sprites utilizadas para animação do drone
