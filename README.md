@@ -22,7 +22,7 @@ Descrição dos Arquivos
 	Main.py 	 - arquivo principal
 	utils.py 	 - Funções uteis utilizadas
 	constants.py 	 - paramentros para a simulação
-	state_machine.py - Implementação da Maquina de estados e dos behaviors paparazzi
+	state_machine.py - Implementação da Maquina de estados e dos behaviors 
 	vehicle.py	 - Implementação da lógica do veiculo (drone) e seus movimentos básicos
 	obstacle.py  	 - Lógica da geraçao de obstaculos
 
