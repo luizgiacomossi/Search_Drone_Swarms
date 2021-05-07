@@ -6,7 +6,7 @@ Para execução do programa é necessário:
 
 - PYTHON
 - VSCode ou algum outro editor de código
-- 
+
 Dependencias: 
 
 - PYGAME -> https://www.pygame.org/wiki/GettingStarted
@@ -25,4 +25,4 @@ Descrição dos Arquivos
 	state_machine.py - Implementação da Maquina de estados e dos behaviors paparazzi
 	vehicle.py	 - Implementação da lógica do veiculo (drone) e seus movimentos 			 básicos
 
-As pastas drone e aircraft se referem a sprites utilizadas para animação do drone
+A pasta model contem sprites utilizadas para animação do drone
