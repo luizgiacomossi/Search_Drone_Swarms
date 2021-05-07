@@ -3,6 +3,7 @@
 Para execução do programa é necessário:
 
 - PYTHON
+- VSCode ou algum outro editor
 
 Dependencias: 
 
