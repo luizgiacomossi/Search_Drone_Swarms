@@ -1,52 +1,35 @@
 import sys, pygame
-from vehicle import Vehicle
 from constants import *
 import random 
 import copy
-from state_machine import FiniteStateMachine, SeekState, StayAtState, OvalState, Eight2State, ScanState
 from utils import FlowField
 from obstacle import Obstacles
+from simulation import Simulation, ScreenSimulation
 
 vec2 = pygame.math.Vector2
 ##=========================
+screenSimulation = ScreenSimulation()
 
-pygame.init()
-font20 = pygame.font.SysFont(None, 20)
-font24 = pygame.font.SysFont(None, 24)
-size = SCREEN_WIDTH, SCREEN_HEIGHT 
-clock = pygame.time.Clock()
-
-screen = pygame.display.set_mode(size)
 # defines initial target
 target = vec2(SCREEN_WIDTH/2, SCREEN_HEIGHT/2)
-
-# state machines for each vehicle
-behaviors =[] 
-# Current simulations 
-simulations = []
 
 # Generates obstacles
 list_obst = []
 obst = Obstacles(10, (SCREEN_WIDTH,SCREEN_HEIGHT))
 obst.generate_obstacles()
 # TTo generate obstacles, uncomment following command
-#list_obst = obst.get_coordenates()
-
+list_obst = obst.get_coordenates()
 
 #create flow field - not used neither fully implemented, flow field can be used as wind
 #flow_field = FlowField(RESOLUTION)
 
-# Create N simultaneous Drones
-for d in range(0, NUM_DRONES):
-    behaviors.append( FiniteStateMachine( SeekState() ) ) # Inicial state
-    drone = Vehicle(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, behaviors[-1], screen)
-    drone.set_target(vec2(SCREEN_WIDTH/2, SCREEN_HEIGHT/2))
-    simulations.append(drone)
+simulation = Simulation(screenSimulation)
+simulation.create_swarm_uav(NUM_DRONES)
 
 run = True
 while run:
     # Draws at every dt
-    clock.tick(FREQUENCY)
+    screenSimulation.clock.tick(FREQUENCY)
 
     # Pygame Events 
     for event in pygame.event.get():
@@ -55,7 +38,7 @@ while run:
         # Key 'd' pressed
         if event.type == pygame.KEYDOWN and event.key == pygame.K_d:
             print('apertei d')
-            for _ in simulations:
+            for _ in simulation.swarm:
                 _.set_debug()
 
         # Mouse Clicked -> new taget or new Drone 
@@ -63,59 +46,34 @@ while run:
             # left button - New Target
             if pygame.mouse.get_pressed()[0] == True:
                 target = vec2(pygame.mouse.get_pos()[0],pygame.mouse.get_pos()[1])
-                # updates target of all simulations 
-                for _ in simulations:
-                    _.set_target(target)
+                simulation.set_target(target)
 
             # right button - New Drone
-            if pygame.mouse.get_pressed()[2] == True:              
-                behaviors.append( FiniteStateMachine( SeekState() ) )
-                drone = Vehicle(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, behaviors[-1], screen)
-                drone.set_target(vec2(pygame.mouse.get_pos()[0],pygame.mouse.get_pos()[1]))
-                simulations.append(drone)
+            if pygame.mouse.get_pressed()[2] == True:
+                simulation.add_new_uav()              
+                
 
     # Background
-    screen.fill(LIGHT_BLUE)
+    screenSimulation.screen.fill(LIGHT_BLUE)
     # Draws obstacles:
     for _ in list_obst:
-         pygame.draw.circle(screen,(100, 100, 100), _, radius=80)
+        pygame.draw.circle(screenSimulation.screen,(100, 100, 100), _, radius=80)
     # draw grid
     #flow_field.draw(screen)
 
     # draws target as a circle on screen
-    pygame.draw.circle(screen, (100, 100, 100), target, RADIUS_TARGET, 2)
+    if target:
+        pygame.draw.circle(screenSimulation.screen, (100, 100, 100), target, RADIUS_TARGET, 2)
 
     # updates and draws all simulations  
-    index = 0 # index is used to track current drone in the simulation list
-    for _ in simulations:
-        # checks if drones colided with eachother
-
-        ## collision avoindance is not implemented yet
-        _.collision_avoidance(simulations,index)
-        _.check_collision(simulations,list_obst,index) 
-        _.update()
-        _.draw(screen) 
-        # index to keep track of  drone in the list
-        index += 1
-        # writes drone id
-        img = font20.render(f'Drone {index}', True, BLUE)
-        screen.blit(img, _.get_position()+(0,20))
-        # writes drone current behavior
-        img = font20.render(_.behavior.get_current_state(), True, BLUE)
-        screen.blit(img, _.get_position()+(0,30))
-        # writes drone current position in column and row
-        p = _.get_position()
-        col =  int(p.x/RESOLUTION) + 1
-        row = int(p.y/RESOLUTION) + 1
-        img = font20.render(f'Pos:{col},{row}', True, BLUE)
-        screen.blit(img, _.get_position()+(0,40))
-
+    simulation.run_simulation(list_obst)
+    
     # Writes the App name in screen
-    img = font24.render('Paparazzi Mobility Model', True, BLUE)
-    screen.blit(img, (20, 20))
+    img = screenSimulation.font24.render('Paparazzi Mobility Model', True, BLUE)
+    screenSimulation.screen.blit(img, (20, 20))
 
     # Debug lines - only to assist the developer
-    img = font24.render('Debug lines: '+ drone.get_debug(), True, BLUE)
-    screen.blit(img, (20, 40))
+    #img = screenSimulation.font24.render('Debug lines: '+ drone.get_debug(), True, BLUE)
+    #screenSimulation.screen.blit(img, (20, 40))
 
     pygame.display.flip() 
