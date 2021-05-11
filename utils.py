@@ -1,4 +1,4 @@
-from constants import SCREEN_WIDTH, SCREEN_HEIGHT, PIX2M, M2PIX,SIZE_DRONE
+from constants import SCREEN_WIDTH, SCREEN_HEIGHT, PIX2M, M2PIX,SIZE_DRONE, RED
 import pygame as pg
 from math import atan2, pi
 import random
@@ -132,6 +132,22 @@ class Aircraft(pg.sprite.Sprite):
         
         # pega o canto superior esquerdo, posição qualquer
         #self.rect.topleft = 100,100
+
+    def colorize(self, newColor=(40,40,40)):
+            """
+            Create a "colorized" copy of a surface (replaces RGB values with the given color, preserving the per-pixel alphas of
+            original).
+            :param image: Surface to create a colorized copy of
+            :param newColor: RGB color to use (original alpha values are preserved)
+            :return: New colorized Surface instance
+            """
+            image = self.image.copy()
+
+            # zero out RGB values
+            #image.fill((0, 0, 0, 255), None, pg.BLEND_RGBA_MULT)
+            # add in new RGB values
+            image.fill(newColor[0:3] + (0,), None, pg.BLEND_RGBA_ADD)
+            self.image = image
 
     def update(self, position, angle, size = SIZE_DRONE* PIX2M):
         

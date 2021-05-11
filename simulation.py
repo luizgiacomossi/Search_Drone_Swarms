@@ -32,7 +32,7 @@ class Simulation(object):
         # Create N simultaneous Drones
         for d in range(0, num_swarm):
             self.behaviors.append( FiniteStateMachine( SeekState() ) ) # Inicial state
-            drone = Vehicle(SCREEN_WIDTH*d/num_swarm, 0, self.behaviors[-1], self.screenSimulation.screen)
+            drone = Vehicle(SCREEN_WIDTH*d/num_swarm, 30, self.behaviors[-1], self.screenSimulation.screen)
             #drone = Vehicle(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, behaviors[-1], screen)
             #drone.set_target(vec2(SCREEN_WIDTH/2, SCREEN_HEIGHT/2))
             self.swarm.append(drone)

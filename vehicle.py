@@ -8,6 +8,7 @@ import copy
 vec2 = pg.math.Vector2
 
 class Vehicle(object):
+
     def __init__(self, x,y, behavior, window):
         """
             idealized vehicle representing a drone
@@ -20,7 +21,7 @@ class Vehicle(object):
         self.debug = False #  debug lines is Off
 
         # Variables used to move drone 
-        self.location = vec2(random.uniform(0,SCREEN_WIDTH),random.uniform(0,SCREEN_HEIGHT)) # Random position in screen
+        self.location = vec2(x,y) # Random position in screen
         self.velocity = vec2(0.1,0) # Inicial speed
         self.target = vec2(x,y)
         self.acceleration = vec2(0,0)
@@ -252,7 +253,7 @@ class Vehicle(object):
 
     def collision_avoidance(self, all_positions, index):
         """
-         This method avoids collisions with oter drones
+         This method avoids collisions with other drones
          During simulation it receives all the positions from all drones 
          index: is the current id of drone being checked 
         """
@@ -270,7 +271,6 @@ class Vehicle(object):
                 diff = diff/d # proporcional to the distance. The closer the stronger needs to be
                 soma += diff
                 count += 1 # p drone is close 
-                #return 1
             aux+=1
             
         if count > 0:
@@ -320,7 +320,6 @@ class Vehicle(object):
                 f = (self.velocity - self.velocity.normalize()*self.max_speed )/ SAMPLE_TIME
                 f = limit(f,self.max_force)
                 #self.velocity *= d/(AVOID_DISTANCE*factor_distance)
-
                 self.applyForce(f)
                 print(f'Alerta de colisão drone {index} com drone {aux}')
                 break

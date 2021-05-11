@@ -5,22 +5,21 @@ import copy
 from utils import FlowField
 from obstacle import Obstacles
 from simulation import Simulation, ScreenSimulation
-
 vec2 = pygame.math.Vector2
 ##=========================
 screenSimulation = ScreenSimulation()
 
 # defines initial target
-target = vec2(SCREEN_WIDTH/2, SCREEN_HEIGHT/2)
+target = vec2(random.uniform(0,SCREEN_WIDTH/2), random.uniform(0,SCREEN_HEIGHT/2))
 
 # Generates obstacles
 list_obst = []
 obst = Obstacles(10, (SCREEN_WIDTH,SCREEN_HEIGHT))
 obst.generate_obstacles()
-# TTo generate obstacles, uncomment following command
-list_obst = obst.get_coordenates()
+# To generate obstacles, uncomment following command
+#list_obst = obst.get_coordenates()
 
-#create flow field - not used neither fully implemented, flow field can be used as wind
+#creates flow field - not used neither fully implemented, flow field can be used as wind
 #flow_field = FlowField(RESOLUTION)
 
 simulation = Simulation(screenSimulation)
@@ -37,7 +36,6 @@ while run:
         
         # Key 'd' pressed
         if event.type == pygame.KEYDOWN and event.key == pygame.K_d:
-            print('apertei d')
             for _ in simulation.swarm:
                 _.set_debug()
 
@@ -52,12 +50,12 @@ while run:
             if pygame.mouse.get_pressed()[2] == True:
                 simulation.add_new_uav()              
                 
-
     # Background
     screenSimulation.screen.fill(LIGHT_BLUE)
     # Draws obstacles:
     for _ in list_obst:
         pygame.draw.circle(screenSimulation.screen,(100, 100, 100), _, radius=80)
+
     # draw grid
     #flow_field.draw(screen)
 
@@ -67,9 +65,10 @@ while run:
 
     # updates and draws all simulations  
     simulation.run_simulation(list_obst)
-    
+
+
     # Writes the App name in screen
-    img = screenSimulation.font24.render('Paparazzi Mobility Model', True, BLUE)
+    img = screenSimulation.font24.render('Swarm Search using Drones', True, BLUE)
     screenSimulation.screen.blit(img, (20, 20))
 
     # Debug lines - only to assist the developer
