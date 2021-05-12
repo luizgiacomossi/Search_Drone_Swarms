@@ -5,6 +5,7 @@ import copy
 from utils import FlowField
 from obstacle import Obstacles
 from simulation import Simulation, ScreenSimulation
+
 vec2 = pygame.math.Vector2
 ##=========================
 screenSimulation = ScreenSimulation()

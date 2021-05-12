@@ -1,10 +1,43 @@
 from constants import SCREEN_WIDTH, SCREEN_HEIGHT, PIX2M, M2PIX,SIZE_DRONE, RED
 import pygame as pg
-from math import atan2, pi
+from math import atan2, pi, exp
 import random
 import copy 
 import numpy as np
 vec = pg.math.Vector2 
+
+def normalFunction(omega,center,position):
+    f = exp( -omega*((position.x - center.x) + (position.y - center.y)))
+    return f
+
+def bivariateFunction(alpha,beta,center,position):
+    '''
+        Calculates the bivariate function
+        
+        position: (x,y)
+        center of the function: (xc,yc)
+        control variables: Alpha and Beta will control the stringthof the vectors in x and y directions
+        return: point in the bivariate function
+    '''
+    #k = 100000000 # parameter
+    k = 100
+    f = exp( -alpha*(position.x - center.x)/k**2 - beta*(position.y - center.y)/k**2 )
+    print(f' f = :{f}')
+    return f
+ 
+def derivativeBivariate(alpha,beta,center,position):
+    '''
+        Calculates the bivariate function
+        
+        position: (x,y)
+        center of the function: (xc,yc)
+        control variables: Alpha and Beta will control the stringthof the vectors in x and y directions
+        return: point in the bivariate function
+    '''
+    f = bivariateFunction(alpha,beta,center,position)
+    dx = f * (-2*alpha/20*(position.x-center.x))
+    dy = f * (-2*beta/20*(position.y-center.y))
+    return vec(dx,dy)
 
 def constrain_ang(ang,min,max):
     if ang > max:

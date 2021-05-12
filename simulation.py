@@ -1,6 +1,6 @@
 import pygame
 from constants import *
-from vehicle import Vehicle
+from vehicle import Vehicle, VehiclePF
 from state_machine import FiniteStateMachine, SeekState, StayAtState, OvalState, Eight2State, ScanState
 
 vec2 = pygame.math.Vector2
@@ -32,14 +32,18 @@ class Simulation(object):
         # Create N simultaneous Drones
         for d in range(0, num_swarm):
             self.behaviors.append( FiniteStateMachine( SeekState() ) ) # Inicial state
-            drone = Vehicle(SCREEN_WIDTH*d/num_swarm, 30, self.behaviors[-1], self.screenSimulation.screen)
+            #using Old vehicle: steering behavior
+            #drone = Vehicle(SCREEN_WIDTH*d/num_swarm, 10, self.behaviors[-1], self.screenSimulation.screen)
+            #using potential fields
+            drone = VehiclePF(SCREEN_WIDTH*d/num_swarm, 10, self.behaviors[-1], self.screenSimulation.screen)
+
             #drone = Vehicle(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, behaviors[-1], screen)
             #drone.set_target(vec2(SCREEN_WIDTH/2, SCREEN_HEIGHT/2))
             self.swarm.append(drone)
 
     def add_new_uav(self):
         self.behaviors.append( FiniteStateMachine( SeekState() ) )
-        drone = Vehicle(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, self.behaviors[-1], self.screenSimulation.screen)
+        drone = VehiclePF(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, self.behaviors[-1], self.screenSimulation.screen)
         drone.set_target(vec2(pygame.mouse.get_pos()[0],pygame.mouse.get_pos()[1]))
         self.append_uav(drone)
     
