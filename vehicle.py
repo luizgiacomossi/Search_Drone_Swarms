@@ -333,7 +333,7 @@ class Vehicle(object):
             if ( d < dist_avoid ) :
                 f_repulsion = derivativeBivariate(factor_repulsion,factor_repulsion, p, self.location )/SAMPLE_TIME
                 print(f_repulsion)
-                f_repulsion = limit(f_repulsion,self.max_force*1.6)
+                f_repulsion = limit(f_repulsion,self.max_force*1.8)
              #----
                 self.applyForce(-f_repulsion)
 
