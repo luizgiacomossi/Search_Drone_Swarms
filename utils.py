@@ -20,9 +20,9 @@ def bivariateFunction(alpha,beta,center,position):
         return: point in the bivariate function
     '''
     #k = 100000000 # parameter
-    k = 100
+    k = 10
     f = exp( -alpha*(position.x - center.x)/k**2 - beta*(position.y - center.y)/k**2 )
-    print(f' f = :{f}')
+    #print(f)
     return f
  
 def derivativeBivariate(alpha,beta,center,position):
@@ -35,8 +35,8 @@ def derivativeBivariate(alpha,beta,center,position):
         return: point in the bivariate function
     '''
     f = bivariateFunction(alpha,beta,center,position)
-    dx = f * (-2*alpha/20*(position.x-center.x))
-    dy = f * (-2*beta/20*(position.y-center.y))
+    dx = f * (-2*alpha*(position.x-center.x))
+    dy = f * (-2*beta*(position.y-center.y))
     return vec(dx,dy)
 
 def constrain_ang(ang,min,max):
@@ -157,7 +157,7 @@ class Aircraft(pg.sprite.Sprite):
         # inherited from the pygame sprite class it is the first element of the drone
         self.image = self.sprites[self.atual]
         # scales down drone sprites to (70,70)
-        self.image = pg.transform.scale(self.image,(70,70))
+        self.image = pg.transform.scale(self.image,(SIZE_DRONE*2,SIZE_DRONE*2))
         # rect is inherited from Sprite
         # defines the sprite's position on the screen
         # take the image size
@@ -193,7 +193,7 @@ class Aircraft(pg.sprite.Sprite):
     
         # Rotates image -> angle should be in degrees
         # rotozoom(Surface, angle, scale) -> Surface
-        self.image = pg.transform.rotozoom(self.image, -angle*180/pi - 90, size)
+        self.image = pg.transform.rotozoom(self.image, -angle*180/pi - 90, .1)
         self.rect = self.image.get_rect()
         # positions center of rect in acual drone position
         self.rect.center = position.x,position.y

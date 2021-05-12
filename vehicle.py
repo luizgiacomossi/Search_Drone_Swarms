@@ -321,27 +321,23 @@ class Vehicle(object):
                 f = limit(f,self.max_force)
                 #self.velocity *= d/(AVOID_DISTANCE*factor_distance)
                 self.applyForce(f)
-                print(f'Alerta de colisão drone {index} com drone {aux}')
+                #print(f'Alerta de colisão drone {index} com drone {aux}')
                 break
             aux +=1
-        # check obstacles 
 
+        # --- Repulsion obstacles 
         for p in pos_obstacles:
             d = (self.location - p).length()
-            factor_distance = 1.3
-            dist_avoid = 100 * factor_distance
+            factor_repulsion = 0.002
+            dist_avoid = RADIUS_OBSTACLES + AVOID_DISTANCE*1.2
             if ( d < dist_avoid ) :
-                diff = (self.location - p).normalize()
-                #f = -self.velocity/ SAMPLE_TIME
-                diff *= self.max_speed
-                steer = (diff - self.velocity)
-                steer = limit(steer,self.max_force)
-            #----
-            #----
-                self.applyForce(steer)
-                #self.velocity *= d/(AVOID_DISTANCE*factor_distance)
-                #self.applyForce(f)
-           
+                f_repulsion = derivativeBivariate(factor_repulsion,factor_repulsion, p, self.location )/SAMPLE_TIME
+                print(f_repulsion)
+                f_repulsion = limit(f_repulsion,self.max_force*1.6)
+             #----
+                self.applyForce(-f_repulsion)
+
+
     def bouncing(self):
         """
             Bouncing Behavior
@@ -467,7 +463,7 @@ class VehiclePF(object):
         distance = (target - self.location).length()
         #calculates repulsion
         if distance < RADIUS_TARGET:
-            omega = 0.1
+            omega = 0.3
             f = normalFunction(omega,target,self.location)
             velocity_repulsion = f * (-2*omega*(self.location-target))
             #acc_repulsion = (d - self.velocity) / SAMPLE_TIME

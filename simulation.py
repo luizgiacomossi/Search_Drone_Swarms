@@ -33,9 +33,10 @@ class Simulation(object):
         for d in range(0, num_swarm):
             self.behaviors.append( FiniteStateMachine( SeekState() ) ) # Inicial state
             #using Old vehicle: steering behavior
-            #drone = Vehicle(SCREEN_WIDTH*d/num_swarm, 10, self.behaviors[-1], self.screenSimulation.screen)
+            drone = Vehicle(SCREEN_WIDTH*d/num_swarm, 10, self.behaviors[-1], self.screenSimulation.screen)
+            
             #using potential fields
-            drone = VehiclePF(SCREEN_WIDTH*d/num_swarm, 10, self.behaviors[-1], self.screenSimulation.screen)
+            #drone = VehiclePF(SCREEN_WIDTH*d/num_swarm, 10, self.behaviors[-1], self.screenSimulation.screen)
 
             #drone = Vehicle(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, behaviors[-1], screen)
             #drone.set_target(vec2(SCREEN_WIDTH/2, SCREEN_HEIGHT/2))
@@ -43,7 +44,12 @@ class Simulation(object):
 
     def add_new_uav(self):
         self.behaviors.append( FiniteStateMachine( SeekState() ) )
-        drone = VehiclePF(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, self.behaviors[-1], self.screenSimulation.screen)
+         #using Old vehicle: steering behavior
+        drone = Vehicle(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, self.behaviors[-1], self.screenSimulation.screen)
+
+        #using potential fields
+        #drone = VehiclePF(SCREEN_WIDTH*d/num_swarm, 10, self.behaviors[-1], self.screenSimulation.screen)
+
         drone.set_target(vec2(pygame.mouse.get_pos()[0],pygame.mouse.get_pos()[1]))
         self.append_uav(drone)
     
@@ -70,11 +76,11 @@ class Simulation(object):
             img = self.screenSimulation.font20.render(f'Drone {index}', True, BLUE)
             self.screenSimulation.screen.blit(img, _.get_position()+(0,20))
             # writes drone current behavior
-            img = self.screenSimulation.font20.render(_.behavior.get_current_state(), True, BLUE)
-            self.screenSimulation.screen.blit(img, _.get_position()+(0,30))
+            #img = self.screenSimulation.font20.render(_.behavior.get_current_state(), True, BLUE)
+            #self.screenSimulation.screen.blit(img, _.get_position()+(0,30))
             # writes drone current position in column and row
             p = _.get_position()
             col =  int(p.x/RESOLUTION) + 1
             row = int(p.y/RESOLUTION) + 1
-            img = self.screenSimulation.font20.render(f'Pos:{col},{row}', True, BLUE)
-            self.screenSimulation.screen.blit(img, _.get_position()+(0,40))
+            #img = self.screenSimulation.font20.render(f'Pos:{col},{row}', True, BLUE)
+            #self.screenSimulation.screen.blit(img, _.get_position()+(0,40))
