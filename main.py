@@ -3,6 +3,7 @@ from constants import *
 import random 
 import copy
 from utils import FlowField
+from scan import DefineTargetScan
 from obstacle import Obstacles
 from simulation import Simulation, ScreenSimulation
 vec2 = pygame.math.Vector2
@@ -16,14 +17,8 @@ target = vec2(random.uniform(0,SCREEN_WIDTH/2), random.uniform(0,SCREEN_HEIGHT/2
 list_obst = []
 obst = Obstacles(10, (SCREEN_WIDTH,SCREEN_HEIGHT))
 obst.generate_obstacles()
-# To generate obstacles, uncomment following command
-#list_obst = obst.get_coordenates()
 
-#creates flow field - not used neither fully implemented, flow field can be used as wind
-#flow_field = FlowField(RESOLUTION)
-
-simulation = Simulation(screenSimulation)
-simulation.create_swarm_uav(NUM_DRONES)
+simulation = Simulation(screenSimulation, DefineTargetScan())
 
 run = True
 while run:
@@ -64,8 +59,10 @@ while run:
         pygame.draw.circle(screenSimulation.screen, (100, 100, 100), target, RADIUS_TARGET, 2)
 
     # updates and draws all simulations  
-    simulation.run_simulation(list_obst)
-
+    run = simulation.run_simulation(list_obst)
+    if not run:
+        img = screenSimulation.font20.render(f'Time Scan Swarm: {simulation.stop_watch - simulation.start_watch}', True, BLUE)
+        screenSimulation.screen.blit(img, (20, 50))
 
     # Writes the App name in screen
     img = screenSimulation.font24.render('Swarm Search using Drones', True, BLUE)
@@ -75,4 +72,7 @@ while run:
     #img = screenSimulation.font24.render('Debug lines: '+ drone.get_debug(), True, BLUE)
     #screenSimulation.screen.blit(img, (20, 40))
 
-    pygame.display.flip() 
+    pygame.display.flip()
+    
+    if not run:
+        pygame.time.wait(5000) 
