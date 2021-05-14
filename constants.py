@@ -3,11 +3,11 @@ SCREEN_WIDTH = 1200
 SCREEN_HEIGHT = 800
 PIX2M = 0.01  # factor to convert from pixels to meters
 M2PIX = 100.0  # factor to convert from meters to pixels
-NUM_DRONES = 10# Number of simultaneous drones
+NUM_DRONES = 2# Number of simultaneous drones
 SIZE_DRONE = 18
 SIZE_TRACK = 100
 RESOLUTION = 100 # Of grid
-NUM_OBSTACLES = 10
+NUM_OBSTACLES = 20
 RADIUS_OBSTACLES = 40
 
 # Sample Time Parameters

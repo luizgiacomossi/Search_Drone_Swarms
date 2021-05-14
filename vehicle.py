@@ -101,6 +101,24 @@ class Vehicle(object):
         # Draws current target being seeked 
         pg.draw.circle(self.window, self.color_target ,target ,5, 0)
     
+    def arrive_new(self, target):
+        """
+            Arrive using potential fields 
+        """
+        # Calculates vector desired 
+        velocity_attract = vec2(0,0)
+        velocity_repulsion= vec2(0,0)
+
+        velocity_attract = derivativeBivariate(.05,.05,target,self.location)
+
+        desired_velocity = (velocity_attract - velocity_repulsion) 
+        error = (desired_velocity - self.velocity) / SAMPLE_TIME 
+        
+        accelerate = limit(error, self.max_force)
+        self.applyForce(accelerate)
+        # Draws current target as a point 
+        pg.draw.circle(self.window, self.color_target ,target ,5, 0)
+
     def arrive(self, target):
         """
             Arrive Steering Behavior
@@ -299,7 +317,7 @@ class Vehicle(object):
 
             #pg.draw.line(self.window, (100, 100, 100), self.location, self.location+self.desired , 1)
             # Draw Direction
-            #pg.draw.line(self.window, (100, 100, 100), self.location, self.location + self.velocity.normalize()*50 , 1)
+            pg.draw.line(self.window, (100, 100, 100), self.location, self.location + self.velocity.normalize()*50 , 1)
 
         # usar sprite para desenhar drone
         self.all_sprites.draw(self.window)
@@ -314,7 +332,7 @@ class Vehicle(object):
         aux = 0 
         for p in positions_drones:
             d = (self.location - p.location).length()
-            factor_distance = 1.8
+            factor_distance = 2
             dist_avoid = AVOID_DISTANCE*factor_distance
             if ( d < dist_avoid )  and (aux != index):
                 #f = (self.velocity - self.velocity.normalize()*self.max_speed )/ SAMPLE_TIME
@@ -324,7 +342,6 @@ class Vehicle(object):
                 #print(f_repulsion)
                 f_repulsion = limit(f_repulsion,self.max_force*1.8)
 
-
                 self.applyForce(-f_repulsion)
                 #print(f'Alerta de colisão drone {index} com drone {aux}')
                 break
@@ -333,8 +350,8 @@ class Vehicle(object):
         # --- Repulsion obstacles 
         for p in pos_obstacles:
             d = (self.location - p).length()
-            factor_repulsion = 0.005
-            dist_avoid = RADIUS_OBSTACLES* 2 + AVOID_DISTANCE
+            factor_repulsion = 0.0011
+            dist_avoid = RADIUS_OBSTACLES*1.5 + AVOID_DISTANCE
             if ( d < dist_avoid ) :
                 f_repulsion = derivativeBivariate(factor_repulsion,factor_repulsion, p, self.location )/SAMPLE_TIME
                 #print(f_repulsion)
@@ -343,7 +360,7 @@ class Vehicle(object):
                 # This condition checks if drone collided with wall
                 # if collided, this avoids that the drone goes over the obstacle
                 if (d < RADIUS_OBSTACLES + SIZE_DRONE):
-                    self.velocity *= -1
+                    self.velocity *= -.5
                 self.applyForce(-f_repulsion)
 
 
