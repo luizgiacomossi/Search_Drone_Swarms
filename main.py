@@ -5,6 +5,7 @@ import copy
 from utils import FlowField
 from obstacle import Obstacles
 from simulation import Simulation, ScreenSimulation
+
 vec2 = pygame.math.Vector2
 ##=========================
 screenSimulation = ScreenSimulation()
@@ -14,10 +15,10 @@ target = vec2(random.uniform(0,SCREEN_WIDTH/2), random.uniform(0,SCREEN_HEIGHT/2
 
 # Generates obstacles
 list_obst = []
-obst = Obstacles(10, (SCREEN_WIDTH,SCREEN_HEIGHT))
+obst = Obstacles(NUM_OBSTACLES, (SCREEN_WIDTH,SCREEN_HEIGHT))
 obst.generate_obstacles()
 # To generate obstacles, uncomment following command
-#list_obst = obst.get_coordenates()
+list_obst = obst.get_coordenates()
 
 #creates flow field - not used neither fully implemented, flow field can be used as wind
 #flow_field = FlowField(RESOLUTION)
@@ -54,7 +55,7 @@ while run:
     screenSimulation.screen.fill(LIGHT_BLUE)
     # Draws obstacles:
     for _ in list_obst:
-        pygame.draw.circle(screenSimulation.screen,(100, 100, 100), _, radius=80)
+        pygame.draw.circle(screenSimulation.screen,(100, 100, 100), _, radius=RADIUS_OBSTACLES)
 
     # draw grid
     #flow_field.draw(screen)

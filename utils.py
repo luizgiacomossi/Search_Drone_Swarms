@@ -1,10 +1,43 @@
 from constants import SCREEN_WIDTH, SCREEN_HEIGHT, PIX2M, M2PIX,SIZE_DRONE, RED
 import pygame as pg
-from math import atan2, pi
+from math import atan2, pi, exp
 import random
 import copy 
 import numpy as np
 vec = pg.math.Vector2 
+
+def normalFunction(omega,center,position):
+    f = exp( -omega*((position.x - center.x) + (position.y - center.y)))
+    return f
+
+def bivariateFunction(alpha,beta,center,position):
+    '''
+        Calculates the bivariate function
+        
+        position: (x,y)
+        center of the function: (xc,yc)
+        control variables: Alpha and Beta will control the stringthof the vectors in x and y directions
+        return: point in the bivariate function
+    '''
+    #k = 100000000 # parameter
+    k = 10
+    f = exp( -alpha*(position.x - center.x)/k**2 - beta*(position.y - center.y)/k**2 )
+    #print(f)
+    return f
+ 
+def derivativeBivariate(alpha,beta,center,position):
+    '''
+        Calculates the bivariate function
+        
+        position: (x,y)
+        center of the function: (xc,yc)
+        control variables: Alpha and Beta will control the stringthof the vectors in x and y directions
+        return: point in the bivariate function
+    '''
+    f = bivariateFunction(alpha,beta,center,position)
+    dx = f * (-2*alpha*(position.x-center.x))
+    dy = f * (-2*beta*(position.y-center.y))
+    return vec(dx,dy)
 
 def constrain_ang(ang,min,max):
     if ang > max:
@@ -74,7 +107,7 @@ def constrain(v2,w,h):
     if v2.x > w:
         v2.x = 0
     if v2.x < 0:
-        v2.x = 0 
+        v2.x = w 
     if v2.y > h:
         v2.y = 0
     if v2.y < 0:
@@ -124,7 +157,7 @@ class Aircraft(pg.sprite.Sprite):
         # inherited from the pygame sprite class it is the first element of the drone
         self.image = self.sprites[self.atual]
         # scales down drone sprites to (70,70)
-        self.image = pg.transform.scale(self.image,(70,70))
+        self.image = pg.transform.scale(self.image,(SIZE_DRONE*2,SIZE_DRONE*2))
         # rect is inherited from Sprite
         # defines the sprite's position on the screen
         # take the image size
@@ -160,7 +193,7 @@ class Aircraft(pg.sprite.Sprite):
     
         # Rotates image -> angle should be in degrees
         # rotozoom(Surface, angle, scale) -> Surface
-        self.image = pg.transform.rotozoom(self.image, -angle*180/pi - 90, size)
+        self.image = pg.transform.rotozoom(self.image, -angle*180/pi - 90, .1)
         self.rect = self.image.get_rect()
         # positions center of rect in acual drone position
         self.rect.center = position.x,position.y
