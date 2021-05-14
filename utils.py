@@ -107,7 +107,7 @@ def constrain(v2,w,h):
     if v2.x > w:
         v2.x = 0
     if v2.x < 0:
-        v2.x = 0 
+        v2.x = w 
     if v2.y > h:
         v2.y = 0
     if v2.y < 0:

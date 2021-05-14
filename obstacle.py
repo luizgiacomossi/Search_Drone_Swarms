@@ -13,7 +13,7 @@ class Obstacles(object):
     def generate_obstacles(self):
         for _ in range(self.num_of_obstacles):
             self.obst.append(vec2(random.uniform(0,self.map_size[0]),
-                            random.uniform(0,self.map_size[1]))) 
+                            random.uniform(100,self.map_size[1]))) 
 
     def get_coordenates(self):
         return self.obst
