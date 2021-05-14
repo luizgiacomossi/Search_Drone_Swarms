@@ -101,7 +101,7 @@ class Vehicle(object):
         # Draws current target being seeked 
         pg.draw.circle(self.window, self.color_target ,target ,5, 0)
     
-    def arrive_new(self, target):
+    def arrive(self, target):
         """
             Arrive using potential fields 
         """
@@ -119,7 +119,7 @@ class Vehicle(object):
         # Draws current target as a point 
         pg.draw.circle(self.window, self.color_target ,target ,5, 0)
 
-    def arrive(self, target):
+    def arrive_old(self, target):
         """
             Arrive Steering Behavior
         """
@@ -313,11 +313,10 @@ class Vehicle(object):
         # Drawing drone's outer circle as a hitbox?
         if self.debug == True:
             pg.draw.circle(self.window, (100, 100, 100), self.location, AVOID_DISTANCE, 1)
-
-
             #pg.draw.line(self.window, (100, 100, 100), self.location, self.location+self.desired , 1)
             # Draw Direction
-            pg.draw.line(self.window, (100, 100, 100), self.location, self.location + self.velocity.normalize()*50 , 1)
+            v = self.velocity.length()
+            pg.draw.line(self.window, (100, 100, 100), self.location, self.location + self.velocity.normalize()*v*20 , 1)
 
         # usar sprite para desenhar drone
         self.all_sprites.draw(self.window)
@@ -363,7 +362,6 @@ class Vehicle(object):
                     self.velocity *= -1
                 self.applyForce(-f_repulsion)
 
-
     def bouncing(self):
         """
             Bouncing Behavior
@@ -385,7 +383,7 @@ class VehiclePF(object):
 
     def __init__(self, x,y, behavior, window):
         """
-            idealized vehicle representing a drone utilizing potential fields
+            This is a class that can be used to test new methods
 
             :param x and y: represents inicial target 
             :param behavior: State Machine 
