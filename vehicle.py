@@ -360,7 +360,7 @@ class Vehicle(object):
                 # This condition checks if drone collided with wall
                 # if collided, this avoids that the drone goes over the obstacle
                 if (d < RADIUS_OBSTACLES + SIZE_DRONE):
-                    self.velocity *= -.5
+                    self.velocity *= -1
                 self.applyForce(-f_repulsion)
 
 
