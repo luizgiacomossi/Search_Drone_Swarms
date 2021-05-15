@@ -8,15 +8,23 @@ from state_machine import FiniteStateMachine, SeekState, StayAtState, OvalState,
 vec2 = pygame.math.Vector2
 ##=========================
 class RateSimulation(object):
-    def __init__(self, in_repetitions, in_num_swarm ):
+    def __init__(self, in_repetitions, in_num_swarm, in_algorithms):
         self.current_repetition = 0
-
-        # Inputs of Rate
-        self.in_repetitions = in_repetitions
-        self.in_num_swarm = in_num_swarm
         
+        # Inputs of Rate
+        self.in_repetitions = in_repetitions * len(in_num_swarm) * len(in_algorithms)
+        
+        self.in_num_swarm = []
+        for n in in_num_swarm:
+            self.in_num_swarm = self.in_num_swarm + [n] * int(self.in_repetitions/len(in_num_swarm))
+        
+        self.in_algorithms = []
+        for a in in_algorithms:
+            self.in_algorithms = self.in_algorithms + [a] * int(self.in_repetitions/len(in_algorithms))
+
         # Outputs of Rate
         self.out_time = []
+        self.print_simulation()
 
     def set_out(self, out_time):
         self.out_time.append(out_time)
@@ -26,7 +34,11 @@ class RateSimulation(object):
             return False
         else:
             self.current_repetition = self.current_repetition + 1
+            self.print_simulation()
             return True
+
+    def print_simulation(self):
+        print(f'{self.current_repetition+1} - num_swarm: {self.in_num_swarm[self.current_repetition]}, Algorithm: {self.in_algorithms[self.current_repetition].to_string()}')
 
 
 class ScreenSimulation(object):
@@ -42,10 +54,9 @@ class ScreenSimulation(object):
 
 class Simulation(object):
     
-    def __init__(self, screenSimulation, algorithm:ScanInterface, rate:RateSimulation):
+    def __init__(self, screenSimulation,rate:RateSimulation):
         self.target_simulation = None
         self.screenSimulation = screenSimulation
-        self.algorithm = algorithm
         self.start_watch = 0
         self.stop_watch = 0
         self.rate = rate
@@ -56,7 +67,7 @@ class Simulation(object):
         # Current simulations 
         self.swarm = []
 
-        self.create_swarm_uav(NUM_DRONES)
+        self.create_swarm_uav(rate.in_num_swarm[0])
 
     def create_swarm_uav(self, num_swarm):
         # Create N simultaneous Drones
@@ -83,7 +94,7 @@ class Simulation(object):
         if self.start_watch == 0:
             self.start_watch = time.time()
 
-        self.algorithm.scan(self, list_obst)
+        self.rate.in_algorithms[self.rate.current_repetition].scan(self, list_obst)
         
         if self.completed_simualtion() >= 0.8 and self.stop_watch == 0:
             self.stop_watch = time.time()
@@ -101,11 +112,12 @@ class Simulation(object):
             for _ in self.swarm:
                 if _.reached_goal(self.target_simulation):
                     count_completed = count_completed + 1 
-        return count_completed/NUM_DRONES
+        return count_completed/self.rate.in_num_swarm[self.rate.current_repetition]
 
     def rest_simulation(self):
-        if self.rate :
-            self.rate.set_out(self.stop_watch - self.start_watch)
+        
+        self.rate.set_out(self.stop_watch - self.start_watch)
+            
         for _ in self.swarm:
             _.set_target(None)
             del _
@@ -113,5 +125,5 @@ class Simulation(object):
         self.start_watch = 0
         self.stop_watch = 0
         self.target_simulation = None
-        self.create_swarm_uav(NUM_DRONES)
+        self.create_swarm_uav(self.rate.in_num_swarm[self.rate.current_repetition])
         

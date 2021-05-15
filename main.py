@@ -18,7 +18,7 @@ list_obst = []
 obst = Obstacles(10, (SCREEN_WIDTH,SCREEN_HEIGHT))
 obst.generate_obstacles()
 
-simulation = Simulation(screenSimulation, DefineTargetScan(), RateSimulation(3,0))
+simulation = Simulation(screenSimulation, RateSimulation(2, [3,5], [DefineTargetScan()]))
 
 run = True
 while run:
@@ -61,11 +61,10 @@ while run:
     # updates and draws all simulations  
     run = simulation.run_simulation(list_obst)
 
-    if simulation.rate:
-        for idx, time in enumerate(simulation.rate.out_time):
-            img = screenSimulation.font20.render(f'{idx+1} - Scan Time: {time}', True, BLUE)
-            screenSimulation.screen.blit(img, (20, 50*(idx+1)))
-
+    for idx, time in enumerate(simulation.rate.out_time):
+        img = screenSimulation.font20.render(f'{idx+1} - Scan Time: {time}', True, BLUE)
+        screenSimulation.screen.blit(img, (20, 50*(idx+1)))
+        
     # Writes the App name in screen
     img = screenSimulation.font24.render('Swarm Search using Drones', True, BLUE)
     screenSimulation.screen.blit(img, (20, 20))

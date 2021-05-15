@@ -1,12 +1,18 @@
 from constants import *
 
 class ScanInterface:
+    def to_string(self) -> str:
+        """return the name of Algorithm"""
+        pass
+
     def scan(self, simulation, list_obst):
         """run the scan algorithm"""
         pass
 
 class DefineTargetScan(ScanInterface):
-    
+    def to_string(self) -> str:
+        return 'DefineTargetScan'
+
     def scan(self, simulation, list_obst):
         index = 0 # index is used to track current drone in the simulation list
         for _ in simulation.swarm:
@@ -36,13 +42,22 @@ class DefineTargetScan(ScanInterface):
                 print(f"Drone {index} atingiu o target")
 
 class RandoWalkScan(ScanInterface):
+    def to_string(self) -> str:
+        return 'RandoWalkScan'
+
     def scan(self, simulation, list_obst):
         pass
 
 class SnookerScan(ScanInterface):
+    def to_string(self) -> str:
+        return 'SnookerScan'
+
     def scan(self, simulation, list_obst):
         pass
 
 class MeshScan(ScanInterface):
+    def to_string(self) -> str:
+        return 'MeshScan'
+
     def scan(self, simulation, list_obst):
         pass
