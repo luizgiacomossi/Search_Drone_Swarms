@@ -9,12 +9,24 @@ vec2 = pygame.math.Vector2
 ##=========================
 class RateSimulation(object):
     def __init__(self, in_repetitions, in_num_swarm ):
+        self.current_repetition = 0
+
         # Inputs of Rate
         self.in_repetitions = in_repetitions
         self.in_num_swarm = in_num_swarm
         
         # Outputs of Rate
         self.out_time = []
+
+    def set_out(self, out_time):
+        self.out_time.append(out_time)
+
+    def next_simulation(self):
+        if self.in_repetitions - 1 == self.current_repetition:
+            return False
+        else:
+            self.current_repetition = self.current_repetition + 1
+            return True
 
 
 class ScreenSimulation(object):
@@ -30,12 +42,13 @@ class ScreenSimulation(object):
 
 class Simulation(object):
     
-    def __init__(self, screenSimulation, algorithm:ScanInterface):
+    def __init__(self, screenSimulation, algorithm:ScanInterface, rate:RateSimulation):
         self.target_simulation = None
         self.screenSimulation = screenSimulation
         self.algorithm = algorithm
         self.start_watch = 0
         self.stop_watch = 0
+        self.rate = rate
 
         # state machines for each vehicle
         self.behaviors =[] 
@@ -74,8 +87,11 @@ class Simulation(object):
         
         if self.completed_simualtion() >= 0.8 and self.stop_watch == 0:
             self.stop_watch = time.time()
-        #    self.rest_simulation()
-            return False
+            
+            if self.rate and self.rate.next_simulation():
+                self.rest_simulation()
+            else:
+                return False
 
         return True
 
@@ -88,9 +104,14 @@ class Simulation(object):
         return count_completed/NUM_DRONES
 
     def rest_simulation(self):
+        if self.rate :
+            self.rate.set_out(self.stop_watch - self.start_watch)
         for _ in self.swarm:
             _.set_target(None)
             del _
+        self.swarm = []
         self.start_watch = 0
         self.stop_watch = 0
+        self.target_simulation = None
         self.create_swarm_uav(NUM_DRONES)
+        
