@@ -1,10 +1,45 @@
+import time
 import pygame
 from constants import *
 from vehicle import Vehicle, VehiclePF
+from scan import ScanInterface
 from state_machine import FiniteStateMachine, SeekState, StayAtState, OvalState, Eight2State, ScanState
 
 vec2 = pygame.math.Vector2
 ##=========================
+class RateSimulation(object):
+    def __init__(self, in_repetitions, in_num_swarm, in_algorithms):
+        self.current_repetition = 0
+        
+        # Inputs of Rate
+        self.in_repetitions = in_repetitions * len(in_num_swarm) * len(in_algorithms)
+        
+        self.in_num_swarm = []
+        for n in in_num_swarm:
+            self.in_num_swarm = self.in_num_swarm + [n] * int(self.in_repetitions/len(in_num_swarm))
+        
+        self.in_algorithms = []
+        for a in in_algorithms:
+            self.in_algorithms = self.in_algorithms + [a] * int(self.in_repetitions/len(in_algorithms))
+
+        # Outputs of Rate
+        self.out_time = []
+        self.print_simulation()
+
+    def set_out(self, out_time):
+        self.out_time.append(out_time)
+
+    def next_simulation(self):
+        if self.in_repetitions - 1 == self.current_repetition:
+            return False
+        else:
+            self.current_repetition = self.current_repetition + 1
+            self.print_simulation()
+            return True
+
+    def print_simulation(self):
+        print(f'{self.current_repetition+1} - num_swarm: {self.in_num_swarm[self.current_repetition]}, Algorithm: {self.in_algorithms[self.current_repetition].to_string()}')
+
 
 class ScreenSimulation(object):
 
@@ -19,14 +54,20 @@ class ScreenSimulation(object):
 
 class Simulation(object):
     
-    def __init__(self, screenSimulation):
+    def __init__(self, screenSimulation,rate:RateSimulation):
+        self.target_simulation = None
         self.screenSimulation = screenSimulation
+        self.start_watch = 0
+        self.stop_watch = 0
+        self.rate = rate
 
         # state machines for each vehicle
         self.behaviors =[] 
         
         # Current simulations 
         self.swarm = []
+
+        self.create_swarm_uav(rate.in_num_swarm[0])
 
     def create_swarm_uav(self, num_swarm):
         # Create N simultaneous Drones
@@ -40,6 +81,7 @@ class Simulation(object):
 
             #drone = Vehicle(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, behaviors[-1], screen)
             #drone.set_target(vec2(SCREEN_WIDTH/2, SCREEN_HEIGHT/2))
+
             self.swarm.append(drone)
 
     def add_new_uav(self):
@@ -57,30 +99,44 @@ class Simulation(object):
         self.swarm.append(drone)
 
     def set_target(self, target):
+        self.target_simulation = target
         for _ in self.swarm:
             _.set_target(target)
 
     def run_simulation(self, list_obst):
-        index = 0 # index is used to track current drone in the simulation list
-        for _ in self.swarm:
-            # checks if drones colided with eachother
+        if self.start_watch == 0:
+            self.start_watch = time.time()
 
-            ## collision avoindance is not implemented yet
-            _.collision_avoidance(self.swarm,index)
-            _.check_collision(self.swarm,list_obst,index) 
-            _.update()
-            _.draw(self.screenSimulation.screen) 
-            # index to keep track of  drone in the list
-            index += 1
-            # writes drone id
-            img = self.screenSimulation.font20.render(f'Drone {index}', True, BLUE)
-            self.screenSimulation.screen.blit(img, _.get_position()+(0,20))
-            # writes drone current behavior
-            #img = self.screenSimulation.font20.render(_.behavior.get_current_state(), True, BLUE)
-            #self.screenSimulation.screen.blit(img, _.get_position()+(0,30))
-            # writes drone current position in column and row
-            p = _.get_position()
-            col =  int(p.x/RESOLUTION) + 1
-            row = int(p.y/RESOLUTION) + 1
-            #img = self.screenSimulation.font20.render(f'Pos:{col},{row}', True, BLUE)
-            #self.screenSimulation.screen.blit(img, _.get_position()+(0,40))
+        self.rate.in_algorithms[self.rate.current_repetition].scan(self, list_obst)
+        
+        if self.completed_simualtion() >= 0.8 and self.stop_watch == 0:
+            self.stop_watch = time.time()
+            
+            if self.rate and self.rate.next_simulation():
+                self.rest_simulation()
+            else:
+                return False
+
+        return True
+
+    def completed_simualtion(self):
+        count_completed = 0
+        if self.target_simulation:
+            for _ in self.swarm:
+                if _.reached_goal(self.target_simulation):
+                    count_completed = count_completed + 1 
+        return count_completed/self.rate.in_num_swarm[self.rate.current_repetition]
+
+    def rest_simulation(self):
+        
+        self.rate.set_out(self.stop_watch - self.start_watch)
+            
+        for _ in self.swarm:
+            _.set_target(None)
+            del _
+
+        self.swarm = []
+        self.start_watch = 0
+        self.stop_watch = 0
+        self.target_simulation = None
+        self.create_swarm_uav(self.rate.in_num_swarm[self.rate.current_repetition])

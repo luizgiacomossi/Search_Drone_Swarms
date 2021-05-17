@@ -29,7 +29,7 @@ class Vehicle(object):
         self.desired = vec2()
 
         self.memory_location = [] # To draw track
-        self.rotation = atan2(self.location.y,self.location.x) # inicital rotation
+        self.rotation = atan2(self.location.y, self.location.x) # inicital rotation
 
         # Arbitrary values
         self.max_speed = FORWARD_SPEED
@@ -49,6 +49,9 @@ class Vehicle(object):
         self.drone = Aircraft() 
         self.all_sprites = pg.sprite.Group()
         self.all_sprites.add(self.drone)
+    
+    def reached_goal(self, target):
+        return target and (target - self.location).length() <= RADIUS_TARGET 
     
     def update(self):
         """
@@ -247,6 +250,12 @@ class Vehicle(object):
                 pg.draw.line(self.window,(0,255,0), center,  new_target ,5)# verde é o target
                 pg.draw.line(self.window,BLACK, self.location, new_target, 2 )
             self.seek(new_target)
+
+    def mission_accomplished(self):
+        if self.target :
+            return self.location.x == self.target.x and self.location.y == self.target.y
+        else:    
+            return False
 
     def get_position(self):
         return self.location
