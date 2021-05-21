@@ -4,6 +4,7 @@ from constants import *
 from vehicle import Vehicle, VehiclePF
 from scan import ScanInterface
 from state_machine import FiniteStateMachine, SeekState, StayAtState, OvalState, Eight2State, ScanState
+from random import uniform
 
 vec2 = pygame.math.Vector2
 ##=========================
@@ -60,6 +61,7 @@ class Simulation(object):
         self.start_watch = 0
         self.stop_watch = 0
         self.rate = rate
+        self.time_executing = 0 
 
         # state machines for each vehicle
         self.behaviors =[] 
@@ -104,12 +106,18 @@ class Simulation(object):
             _.set_target(target)
 
     def run_simulation(self, list_obst):
+        if self.target_simulation:
+            pygame.draw.circle(self.screenSimulation.screen, (100, 100, 100), self.target_simulation, RADIUS_TARGET, 2)
+
         if self.start_watch == 0:
             self.start_watch = time.time()
 
         self.rate.in_algorithms[self.rate.current_repetition].scan(self, list_obst)
         
-        if self.completed_simualtion() >= 0.8 and self.stop_watch == 0:
+        self.time_executing += SAMPLE_TIME # count time of execution based on the sampling
+        print(self.time_executing)
+
+        if self.completed_simualtion() >= 0.8 and self.stop_watch == 0 or self.time_executing > TIME_MAX_SIMULATION:
             self.stop_watch = time.time()
             
             if self.rate and self.rate.next_simulation():
@@ -128,8 +136,11 @@ class Simulation(object):
         return count_completed/self.rate.in_num_swarm[self.rate.current_repetition]
 
     def rest_simulation(self):
-        
-        self.rate.set_out(self.stop_watch - self.start_watch)
+
+        time = self.stop_watch - self.start_watch
+        if self.time_executing > TIME_MAX_SIMULATION:
+            time = "Goal not reached"
+        self.rate.set_out(time)
             
         for _ in self.swarm:
             _.set_target(None)
@@ -140,3 +151,7 @@ class Simulation(object):
         self.stop_watch = 0
         self.target_simulation = None
         self.create_swarm_uav(self.rate.in_num_swarm[self.rate.current_repetition])
+        self.time_executing = 0 # Reset timer
+        # set new random target for iteration
+        target = vec2(uniform(100,SCREEN_WIDTH), uniform(100,SCREEN_HEIGHT))
+        self.set_target(target)

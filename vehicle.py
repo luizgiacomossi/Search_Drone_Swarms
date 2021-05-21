@@ -104,7 +104,7 @@ class Vehicle(object):
         # Draws current target being seeked 
         pg.draw.circle(self.window, self.color_target ,target ,5, 0)
     
-    def arrive(self, target):
+    def arrive_new(self, target):
         """
             Arrive using potential fields 
         """
@@ -122,7 +122,7 @@ class Vehicle(object):
         # Draws current target as a point 
         pg.draw.circle(self.window, self.color_target ,target ,5, 0)
 
-    def arrive_old(self, target):
+    def arrive(self, target):
         """
             Arrive Steering Behavior
         """
@@ -358,8 +358,8 @@ class Vehicle(object):
         # --- Repulsion obstacles 
         for p in pos_obstacles:
             d = (self.location - p).length()
-            factor_repulsion = 0.0011
-            dist_avoid = RADIUS_OBSTACLES*1.5 + AVOID_DISTANCE
+            factor_repulsion = 0.005
+            dist_avoid = RADIUS_OBSTACLES*1.6 + AVOID_DISTANCE
             if ( d < dist_avoid ) :
                 f_repulsion = derivativeBivariate(factor_repulsion,factor_repulsion, p, self.location )/SAMPLE_TIME
                 #print(f_repulsion)
@@ -369,20 +369,8 @@ class Vehicle(object):
                 # if collided, this avoids that the drone goes over the obstacle
                 if (d < RADIUS_OBSTACLES + SIZE_DRONE):
                     self.velocity *= -1
+
                 self.applyForce(-f_repulsion)
-
-    def bouncing(self):
-        """
-            Bouncing Behavior
-            NOT USED
-        """
-
-        if self.location.x + self.radius > SCREEN_WIDTH or self.location.x - self.radius< 0:
-            self.velocity.x *= -1
-        if self.location.y + self.radius> SCREEN_HEIGHT or self.location.y- self.radius < 0:
-            self.velocity.y *= -1
-
-        self.location += self.velocity
 
     # Deleting (Calling destructor)
     def __del__(self):
