@@ -5,6 +5,7 @@ from vehicle import Vehicle, VehiclePF
 from scan import ScanInterface
 from state_machine import FiniteStateMachine, SeekState, StayAtState, OvalState, Eight2State, ScanState
 from random import uniform
+from obstacle import Obstacles
 
 vec2 = pygame.math.Vector2
 ##=========================
@@ -55,14 +56,17 @@ class ScreenSimulation(object):
 
 class Simulation(object):
     
-    def __init__(self, screenSimulation,rate:RateSimulation):
+    def __init__(self, screenSimulation,rate:RateSimulation, num_obstacles = NUM_OBSTACLES):
         self.target_simulation = None
         self.screenSimulation = screenSimulation
         self.start_watch = 0
         self.stop_watch = 0
         self.rate = rate
         self.time_executing = 0 
-
+        # variables for obstacles
+        self.obstacles = Obstacles(num_obstacles, (SCREEN_WIDTH,SCREEN_HEIGHT))
+        self.list_obst = []
+        self.generate_obstacles()
         # state machines for each vehicle
         self.behaviors =[] 
         
@@ -70,6 +74,11 @@ class Simulation(object):
         self.swarm = []
 
         self.create_swarm_uav(rate.in_num_swarm[0])
+
+    def generate_obstacles(self):
+        # Generates obstacles
+        self.obstacles.generate_obstacles()
+        self.list_obst = self.obstacles.get_coordenates()
 
     def create_swarm_uav(self, num_swarm):
         # Create N simultaneous Drones
@@ -105,14 +114,17 @@ class Simulation(object):
         for _ in self.swarm:
             _.set_target(target)
 
-    def run_simulation(self, list_obst):
+    def run_simulation(self):
         if self.target_simulation:
             pygame.draw.circle(self.screenSimulation.screen, (100, 100, 100), self.target_simulation, RADIUS_TARGET, 2)
+
+        for _ in self.list_obst:
+            pygame.draw.circle(self.screenSimulation.screen,(100, 100, 100), _, radius=RADIUS_OBSTACLES)
 
         if self.start_watch == 0:
             self.start_watch = time.time()
 
-        self.rate.in_algorithms[self.rate.current_repetition].scan(self, list_obst)
+        self.rate.in_algorithms[self.rate.current_repetition].scan(self, self.list_obst)
         
         self.time_executing += SAMPLE_TIME # count time of execution based on the sampling
         print(self.time_executing)
@@ -136,6 +148,8 @@ class Simulation(object):
         return count_completed/self.rate.in_num_swarm[self.rate.current_repetition]
 
     def rest_simulation(self):
+        # new obstacles
+        self.generate_obstacles()
 
         time = self.stop_watch - self.start_watch
         if self.time_executing > TIME_MAX_SIMULATION:

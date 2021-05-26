@@ -14,14 +14,6 @@ screenSimulation = ScreenSimulation()
 # defines initial target
 target = vec2(random.uniform(0,SCREEN_WIDTH/2), random.uniform(0,SCREEN_HEIGHT/2))
 
-# Generates obstacles
-list_obst = []
-obst = Obstacles(NUM_OBSTACLES, (SCREEN_WIDTH,SCREEN_HEIGHT))
-obst.generate_obstacles()
-
-# To generate obstacles, uncomment following command
-list_obst = obst.get_coordenates()
-
 simulation = Simulation(screenSimulation, RateSimulation(5, [3,5], [DefineTargetScan()]))
 
 run = True
@@ -51,22 +43,18 @@ while run:
                 
     # Background
     screenSimulation.screen.fill(LIGHT_BLUE)
-    # Draws obstacles:
-    for _ in list_obst:
-        pygame.draw.circle(screenSimulation.screen,(100, 100, 100), _, radius=RADIUS_OBSTACLES)
 
     # draw grid
     #flow_field.draw(screen)
 
-    # draws target as a circle on screen
-    #if target:
-        #pygame.draw.circle(screenSimulation.screen, (100, 100, 100), target, RADIUS_TARGET, 2)
-
     # updates and draws all simulations  
-    run = simulation.run_simulation(list_obst)
+    run = simulation.run_simulation()
 
     for idx, time in enumerate(simulation.rate.out_time):
-        img = screenSimulation.font20.render(f'{idx+1} - Scan Time: {time}', True, BLUE)
+        try:
+            img = screenSimulation.font20.render(f'{idx+1} - Scan Time: {time:.2f}', True, BLUE)
+        except:
+            img = screenSimulation.font20.render(f'{idx+1} - Scan Time: {time}', True, BLUE)
         screenSimulation.screen.blit(img, (20, 20*(idx+2)))
         
     # Writes the App name in screen
