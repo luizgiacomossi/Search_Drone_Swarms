@@ -1,7 +1,8 @@
 import random
-from pygame import math
+import pygame as pg
+from utils import Tree
 
-vec2 = math.Vector2
+vec2 = pg.math.Vector2
 random.seed(3)
 
 class Obstacles(object):
@@ -10,6 +11,11 @@ class Obstacles(object):
         self.num_of_obstacles = num_of_obstacles
         self.map_size = map_size
         self.obst = []
+        
+        # Variables to draw tree using Sprites
+        self.tree = Tree() 
+        self.all_sprites = pg.sprite.Group()
+        self.all_sprites.add(self.tree)
         
     def generate_obstacles(self):
         self.obst = []
@@ -20,3 +26,7 @@ class Obstacles(object):
                                   
     def get_coordenates(self):
         return self.obst
+
+    def draw(self):
+        self.all_sprites.draw(self.window)
+        self.all_sprites.update(self.location,self.rotation)

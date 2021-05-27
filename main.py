@@ -11,10 +11,12 @@ vec2 = pygame.math.Vector2
 ##=========================
 screenSimulation = ScreenSimulation()
 
+background_image = pygame.image.load("models/texture/camouflage.png").convert()
+background_image = pygame.transform.scale(background_image,(SCREEN_WIDTH,SCREEN_HEIGHT))
 # defines initial target
 target = vec2(random.uniform(0,SCREEN_WIDTH/2), random.uniform(0,SCREEN_HEIGHT/2))
 
-simulation = Simulation(screenSimulation, RateSimulation(5, [3,5], [DefineTargetScan()]))
+simulation = Simulation(screenSimulation, RateSimulation(5, [10,20], [DefineTargetScan()]))
 
 run = True
 while run:
@@ -42,7 +44,8 @@ while run:
                 simulation.add_new_uav()              
                 
     # Background
-    screenSimulation.screen.fill(LIGHT_BLUE)
+    #screenSimulation.screen.fill(LIGHT_BLUE)
+    screenSimulation.screen.blit(background_image, [0, 0])
 
     # draw grid
     #flow_field.draw(screen)
@@ -52,13 +55,13 @@ while run:
 
     for idx, time in enumerate(simulation.rate.out_time):
         try:
-            img = screenSimulation.font20.render(f'{idx+1} - Scan Time: {time:.2f}', True, BLUE)
+            img = screenSimulation.font20.render(f'{idx+1} - Scan Time: {time:.2f}', True, LIGHT_BLUE)
         except:
             img = screenSimulation.font20.render(f'{idx+1} - Scan Time: {time}', True, BLUE)
         screenSimulation.screen.blit(img, (20, 20*(idx+2)))
         
     # Writes the App name in screen
-    img = screenSimulation.font24.render('Swarm Search using Drones', True, BLUE)
+    img = screenSimulation.font24.render('Swarm Search using Drones', True, LIGHT_BLUE)
     screenSimulation.screen.blit(img, (20, 20))
 
     # Debug lines - only to assist the developer

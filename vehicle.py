@@ -325,7 +325,7 @@ class Vehicle(object):
             #pg.draw.line(self.window, (100, 100, 100), self.location, self.location+self.desired , 1)
             # Draw Direction
             v = self.velocity.length()
-            pg.draw.line(self.window, (100, 100, 100), self.location, self.location + self.velocity.normalize()*v*20 , 1)
+            pg.draw.line(self.window, self.color_target, self.location, self.location + self.velocity.normalize()*v*20 , 1)
 
         # usar sprite para desenhar drone
         self.all_sprites.draw(self.window)

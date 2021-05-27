@@ -6,6 +6,7 @@ from scan import ScanInterface
 from state_machine import FiniteStateMachine, SeekState, StayAtState, OvalState, Eight2State, ScanState
 from random import uniform
 from obstacle import Obstacles
+from utils import Npc_target
 
 vec2 = pygame.math.Vector2
 ##=========================
@@ -72,6 +73,10 @@ class Simulation(object):
         
         # Current simulations 
         self.swarm = []
+        # npc target 
+        self.npc = Npc_target()
+        self.all_sprites = pygame.sprite.Group()
+        self.all_sprites.add(self.npc)
 
         self.create_swarm_uav(rate.in_num_swarm[0])
 
@@ -89,9 +94,6 @@ class Simulation(object):
             
             #using potential fields
             #drone = VehiclePF(SCREEN_WIDTH*d/num_swarm, 10, self.behaviors[-1], self.screenSimulation.screen)
-
-            #drone = Vehicle(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, behaviors[-1], screen)
-            #drone.set_target(vec2(SCREEN_WIDTH/2, SCREEN_HEIGHT/2))
 
             self.swarm.append(drone)
 
@@ -115,17 +117,24 @@ class Simulation(object):
             _.set_target(target)
 
     def run_simulation(self):
-        if self.target_simulation:
+
+        if self.target_simulation: # draw target - npc
+            self.all_sprites.draw(self.screenSimulation.screen)
+            self.all_sprites.update(self.target_simulation,0)
             pygame.draw.circle(self.screenSimulation.screen, (100, 100, 100), self.target_simulation, RADIUS_TARGET, 2)
 
-        for _ in self.list_obst:
-            pygame.draw.circle(self.screenSimulation.screen,(100, 100, 100), _, radius=RADIUS_OBSTACLES)
 
         if self.start_watch == 0:
             self.start_watch = time.time()
 
         self.rate.in_algorithms[self.rate.current_repetition].scan(self, self.list_obst)
         
+        for _ in self.list_obst: # draws the sprites of tree
+            self.obstacles.all_sprites.draw(self.screenSimulation.screen)
+            self.obstacles.all_sprites.update(_,0)
+            pygame.draw.circle(self.screenSimulation.screen,(200, 200, 200), _, radius=RADIUS_OBSTACLES, width=1)
+
+
         self.time_executing += SAMPLE_TIME # count time of execution based on the sampling
         print(self.time_executing)
 

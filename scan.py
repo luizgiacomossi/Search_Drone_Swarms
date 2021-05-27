@@ -26,7 +26,7 @@ class DefineTargetScan(ScanInterface):
             # index to keep track of  drone in the list
             index += 1
             # writes drone id
-            img = simulation.screenSimulation.font20.render(f'Drone {index}', True, BLUE)
+            img = simulation.screenSimulation.font20.render(f'Drone {index}', True, LIGHT_BLUE)
             simulation.screenSimulation.screen.blit(img, _.get_position()+(0,20))
             # writes drone current behavior
             #img = simulation.screenSimulation.font20.render(_.behavior.get_current_state(), True, BLUE)

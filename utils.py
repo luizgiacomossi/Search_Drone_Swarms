@@ -1,4 +1,4 @@
-from constants import SCREEN_WIDTH, SCREEN_HEIGHT, PIX2M, M2PIX,SIZE_DRONE, RED
+from constants import *
 import pygame as pg
 from math import atan2, pi, exp
 import random
@@ -53,8 +53,8 @@ def random_color():
         :return: color picked
         :rtype : tuple
     """
-
-    rgbl=[255,0,0]
+    a = random.uniform(0,255)
+    rgbl=[a,0,0]
     random.shuffle(rgbl)
     return tuple(rgbl)
 
@@ -151,7 +151,8 @@ class Aircraft(pg.sprite.Sprite):
         self.sprites = []
 
         for i in range(0,4):
-            self.sprites.append(pg.image.load(f'models/Drone5/sprite_{i}.png'))
+            self.sprites.append(pg.image.load(f'models/Drone5/sprite_{i}.png').convert())
+            
 
         self.atual = 0
         # inherited from the pygame sprite class it is the first element of the drone
@@ -193,7 +194,7 @@ class Aircraft(pg.sprite.Sprite):
     
         # Rotates image -> angle should be in degrees
         # rotozoom(Surface, angle, scale) -> Surface
-        self.image = pg.transform.rotozoom(self.image, -angle*180/pi - 90, .1)
+        self.image = pg.transform.rotozoom(self.image, -angle*180/pi - 90, .12)
         self.rect = self.image.get_rect()
         # positions center of rect in acual drone position
         self.rect.center = position.x,position.y
@@ -216,5 +217,88 @@ class FlowField():
                 rect = pg.Rect(x, y, blockSize, blockSize)
                 pg.draw.rect(screen, (200,200,200), rect, 1)
 
+class Npc_target(pg.sprite.Sprite):
+    """
+        Represents a simple visual animated tree 
+        Can load sprites, rotate and update animation
+    """
+    def __init__(self):
+        pg.sprite.Sprite.__init__(self)
+        self.sprites = []
+
+        #for i in range(1,4):
+        self.sprites.append(pg.image.load(f'models/texture/wandering_trader1.png').convert())
+        self.sprites[-1] =  pg.transform.rotozoom(self.sprites[-1], 0, 1)
+
+        self.atual = 0
+        # inherited from the pygame sprite class it is the first element of the drone
+        self.image = self.sprites[self.atual]
+        # scales down drone sprites to (70,70)
+        #self.image = pg.transform.scale(self.image,(RADIUS_OBSTACLES,RADIUS_OBSTACLES))
+        # rect is inherited from Sprite
+        # defines the sprite's position on the screen
+        # take the image size
+        self.rect = self.image.get_rect()
+        
+        # pega o canto superior esquerdo, posição qualquer
+        #self.rect.topleft = 100,100
 
 
+    def update(self, position, angle, size = SIZE_DRONE* PIX2M):
+        
+        # animation update speed is controle by this parameter
+        self.atual += .001
+        if self.atual >= len(self.sprites)-1:
+            self.atual = 0
+
+        self.image = self.sprites[round(self.atual)]
+    
+        # Rotates image -> angle should be in degrees
+        # rotozoom(Surface, angle, scale) -> Surface
+        #self.image = pg.transform.rotozoom(self.image, 0, .2)
+        self.rect = self.image.get_rect()
+        # positions center of rect in acual drone position
+        self.rect.midbottom = position.x,position.y+20
+
+class Tree(pg.sprite.Sprite):
+    """
+        Represents a simple visual animated tree 
+        Can load sprites, rotate and update animation
+    """
+    def __init__(self):
+        pg.sprite.Sprite.__init__(self)
+        self.sprites = []
+
+        for i in range(1,4):
+            self.sprites.append(pg.image.load(f'models/tree3/tree_{i}.png').convert())
+            self.sprites[i-1] =  pg.transform.rotozoom(self.sprites[i-1], 0, .3)
+
+        self.atual = 0
+        # inherited from the pygame sprite class it is the first element of the drone
+        self.image = self.sprites[self.atual]
+        # scales down drone sprites to (70,70)
+        #self.image = pg.transform.scale(self.image,(RADIUS_OBSTACLES,RADIUS_OBSTACLES))
+        # rect is inherited from Sprite
+        # defines the sprite's position on the screen
+        # take the image size
+        self.rect = self.image.get_rect()
+        
+        # pega o canto superior esquerdo, posição qualquer
+        #self.rect.topleft = 100,100
+
+
+    def update(self, position, angle, size = SIZE_DRONE* PIX2M):
+        
+        # animation update speed is controle by this parameter
+        self.atual += .001
+        if self.atual >= len(self.sprites)-1:
+            self.atual = 0
+
+        self.image = self.sprites[round(self.atual)]
+    
+        # Rotates image -> angle should be in degrees
+        # rotozoom(Surface, angle, scale) -> Surface
+        #self.image = pg.transform.rotozoom(self.image, 0, .2)
+        self.rect = self.image.get_rect()
+        # positions center of rect in acual drone position
+        self.rect.midbottom = position.x,position.y+20
