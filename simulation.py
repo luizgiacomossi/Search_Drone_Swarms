@@ -133,6 +133,8 @@ class Simulation(object):
             self.obstacles.all_sprites.draw(self.screenSimulation.screen)
             self.obstacles.all_sprites.update(_,0)
             pygame.draw.circle(self.screenSimulation.screen,(200, 200, 200), _, radius=RADIUS_OBSTACLES, width=1)
+            pygame.draw.circle(self.screenSimulation.screen,(200, 200, 200), _, radius=RADIUS_OBSTACLES*1.6 + AVOID_DISTANCE, width=1)
+            
 
 
         self.time_executing += SAMPLE_TIME # count time of execution based on the sampling

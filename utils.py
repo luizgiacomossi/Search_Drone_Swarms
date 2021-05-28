@@ -1,6 +1,6 @@
 from constants import *
 import pygame as pg
-from math import atan2, pi, exp
+from math import atan2, pi, exp, floor
 import random
 import copy 
 import numpy as np
@@ -151,7 +151,7 @@ class Aircraft(pg.sprite.Sprite):
         self.sprites = []
 
         for i in range(0,4):
-            self.sprites.append(pg.image.load(f'models/Drone5/sprite_{i}.png').convert())
+            self.sprites.append(pg.image.load(f'models/Drone_hd/sprite_{i}.png').convert())
             
 
         self.atual = 0
@@ -186,11 +186,11 @@ class Aircraft(pg.sprite.Sprite):
     def update(self, position, angle, size = SIZE_DRONE* PIX2M):
         
         # animation update speed is controle by this parameter
-        self.atual += 1
+        self.atual += .1
         if self.atual >= len(self.sprites):
             self.atual = 0
 
-        self.image = self.sprites[round(self.atual)]
+        self.image = self.sprites[floor(self.atual)]
     
         # Rotates image -> angle should be in degrees
         # rotozoom(Surface, angle, scale) -> Surface
