@@ -186,7 +186,8 @@ class Aircraft(pg.sprite.Sprite):
     def update(self, position, angle, size = SIZE_DRONE* PIX2M):
         
         # animation update speed is controle by this parameter
-        self.atual += .1
+        self.atual += 1
+        
         if self.atual >= len(self.sprites):
             self.atual = 0
 
@@ -194,7 +195,7 @@ class Aircraft(pg.sprite.Sprite):
     
         # Rotates image -> angle should be in degrees
         # rotozoom(Surface, angle, scale) -> Surface
-        self.image = pg.transform.rotozoom(self.image, -angle*180/pi - 90, .12)
+        self.image = pg.transform.rotozoom(self.image, -angle*180/pi - 90, .14)
         self.rect = self.image.get_rect()
         # positions center of rect in acual drone position
         self.rect.center = position.x,position.y

@@ -138,7 +138,7 @@ class Simulation(object):
 
 
         self.time_executing += SAMPLE_TIME # count time of execution based on the sampling
-        print(self.time_executing)
+        #print(self.time_executing)
 
         if self.completed_simualtion() >= 0.8 and self.stop_watch == 0 or self.time_executing > TIME_MAX_SIMULATION:
             self.stop_watch = time.time()
