@@ -1,7 +1,7 @@
 import pygame as pg
 from utils import Aircraft, random_color, limit, constrain, bivariateFunction, derivativeBivariate, normalFunction
 from constants import *
-from math import cos, sin, atan2, pi
+from math import cos, sin, atan2, pi, inf
 import random
 import copy 
 
@@ -23,10 +23,14 @@ class Vehicle(object):
         # Variables used to move drone 
         self.location = vec2(x,y) # Random position in screen
         self.velocity = vec2(0.1,0) # Inicial speed
+        self.mission_target = vec2(x,y)
         self.target = vec2(x,y)
         self.acceleration = vec2(0,0)
         self.radius = SIZE_DRONE # Drone Size
         self.desired = vec2()
+        # closest drone
+        self.closest_drone = None
+        self.index_closest_drone = None
 
         self.memory_location = [] # To draw track
         self.rotation = atan2(self.location.y, self.location.x) # inicital rotation
@@ -49,7 +53,7 @@ class Vehicle(object):
         self.drone = Aircraft() 
         self.all_sprites = pg.sprite.Group()
         self.all_sprites.add(self.drone)
-    
+
     def reached_goal(self, target):
         return target and (target - self.location).length() <= RADIUS_TARGET 
     
@@ -338,14 +342,16 @@ class Vehicle(object):
         # check drones
         f = 1
         aux = 0 
+        closest = +inf
         for p in positions_drones:
             d = (self.location - p.location).length()
+            # check closest drone in the swarm
+            if d < closest:
+                self.closest_drone = p.location
+
             factor_distance = 2
             dist_avoid = AVOID_DISTANCE*factor_distance
             if ( d < dist_avoid )  and (aux != index):
-                #f = (self.velocity - self.velocity.normalize()*self.max_speed )/ SAMPLE_TIME
-                #f = limit(f,self.max_force)
-                #self.velocity *= d/(AVOID_DISTANCE*factor_distance)
                 f_repulsion = derivativeBivariate(0.001,.001, p.location , self.location )/SAMPLE_TIME
                 #print(f_repulsion)
                 f_repulsion = limit(f_repulsion,self.max_force*1.8)
@@ -372,11 +378,14 @@ class Vehicle(object):
 
                 self.applyForce(-f_repulsion)
 
+    def get_closest_drone(self):
+        return self.closest_drone
+    
     # Deleting (Calling destructor)
     def __del__(self):
         print('Drone Deleted')
 
-class VehiclePF(object):
+class VehiclePF(Vehicle):
 
     def __init__(self, x,y, behavior, window):
         """

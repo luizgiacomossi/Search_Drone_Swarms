@@ -1,10 +1,11 @@
 import random
 from random import choices
-from math import pi, atan2
+from math import pi, atan2, inf
 from constants import *
 import numpy as np
 import pygame 
 import time
+import copy 
 
 vec2 = pygame.math.Vector2
 
@@ -78,6 +79,9 @@ class SeekState(State):
         self.time_executing = 0 #Variavel para contagem do tempo de execução 
         print('Seek')
         self.finished = False
+        self.memory_last_position = vec2(inf,inf)
+        self.sampling_time = 3
+        self.time_blocked = 0
 
     def check_transition(self, agent, state_machine):
         # Todo: add logic to check and execute state transition
@@ -85,48 +89,63 @@ class SeekState(State):
         # New target from mouse click
         if agent.get_target():
             self.target = agent.get_target()
+            agent.mission_target = agent.get_target()
             agent.set_target(None)
-            self.sequence = 0 # reinicia movimento
 
-        # chegou ao waypoint
-        # if self.finished == True:
-        #     next_state = get_random_state()
-        #     if next_state == 'SeekState':
-        #         state_machine.change_state(SeekState())  
-        #     elif next_state == 'StayAtState':
-        #         state_machine.change_state(StayAtState())  
-        #     elif next_state == 'Eight2State':
-        #         state_machine.change_state(Eight2State())  
-        #     elif next_state == 'OvalState':
-        #         state_machine.change_state(OvalState())  
-        #     elif next_state == 'ScanState':
-        #         state_machine.change_state(ScanState())  
+
+        # distancia percorrida desde a amostragem
+        dist = (self.memory_last_position - agent.get_position()).magnitude()
+
+        #self.state_name = f"{dist:.2}"
+        d = (self.target - agent.get_position()).magnitude()
+        # verifica se chegou
+        if d <= RADIUS_TARGET and d > 3 :
+            self.finished = True
+        else: # nao chegou
+            self.state_name = f'buscando targeet {self.target}'
+        
+        # printa estado no drone
+        if self.finished == True:
+            self.state_name = 'Cheguei'
+
+        if dist < 30 and self.finished == False :
+            self.time_blocked += SAMPLE_TIME
+            self.state_name = f'TRAVADO: {self.time_blocked:.2f}'
+            if self.time_blocked > 2:
+                state_machine.change_state(GoToClosestDroneState())  
+
+
              
     def execute(self, agent):
         # logic to move drone to target
         try:
             self.target
         except:
-            self.target = agent.get_position()
+            self.target = agent.mission_target
+
 
         agent.arrive(self.target)
-        self.time_executing +=1
-        
-        if (self.target - agent.location).length() < 10 and self.time_executing > 300:
-            self.finished = True
+        self.time_executing += SAMPLE_TIME
 
-class StayAtState(State):
+        # Sampling location every T seconds
+        if self.time_executing >=  self.sampling_time:
+            self.time_executing = 0 
+            self.memory_last_position = copy.deepcopy(agent.get_position())
+
+
+class GoToClosestDroneState(State):
     """
-        Drone will orbit a target
-    """ 
+        Drone will seek closest drone in swarm  
+    """
     def __init__(self):
-        self.state_name = 'StayAt'
-        #  initialization code
+        # Todo: add initialization code
+        self.state_name = 'GoToClosesDroneState'
         self.time_executing = 0 #Variavel para contagem do tempo de execução 
-        print('StayAt')
-        
+        print('GoToClosesDroneState')
+        self.finished = False
+
     def check_transition(self, agent, state_machine):
-        #  logic to check and execute state transition
+        # Todo: add logic to check and execute state transition
 
         # New target from mouse click
         if agent.get_target():
@@ -134,312 +153,62 @@ class StayAtState(State):
             agent.set_target(None)
             self.sequence = 0 # reinicia movimento
 
-        # Arbitrary runtime transition-> next state is random
-        if self.time_executing > 6000:
-            next_state = get_random_state()
-            if next_state == 'SeekState':
+        if self.time_executing > 3:
+            state_machine.change_state(RandomTargetState()) 
+
+        # chegou ao waypoint
+        if self.finished == True:
                 state_machine.change_state(SeekState())  
-            elif next_state == 'StayAtState':
-                state_machine.change_state(StayAtState())  
-            elif next_state == 'Eight2State':
-                state_machine.change_state(Eight2State())  
-            elif next_state == 'OvalState':
-                state_machine.change_state(OvalState())  
-            elif next_state == 'ScanState':
-                state_machine.change_state(ScanState())   
-        
+ 
+             
     def execute(self, agent):
         # logic to move drone to target
         try:
             self.target
         except:
-            self.target = vec2(SCREEN_WIDTH/2, SCREEN_HEIGHT/2) 
+            self.target = agent.get_closest_drone()
 
-        self.time_executing += 1
-        # defines target 
-        agent.seek_around(self.target)
-
-class OvalState(State):
-    """
-         Drone will perform a Oval path
-    """ 
-    def __init__(self):
-        # Todo: add initialization code
-        self.state_name = 'Oval'
-        self.theta = 0 #Variavel para contagem do angulo atual  
-        print('OvalState')
-        self.target = vec2(SCREEN_WIDTH/2, SCREEN_HEIGHT/2)
-        self.sequence = 0
-        self.finished = False
-
-    def check_transition(self, agent, state_machine):
-        # Todo: add logic to check and execute state transition
-        #if self.time_executing > 300:
-            #state_machine.change_state(SeekState())  
-        # Transição Colidiu -> Mover para estado: Go Back
-        if agent.get_target():
-            self.target = agent.get_target()
-            agent.set_target(None)
-            self.sequence = 0 # reinicia movimento
+        agent.arrive(self.target)
+        self.time_executing +=SAMPLE_TIME
         
-        if self.finished == True:
-            next_state = get_random_state()
-            if next_state == 'SeekState':
-                state_machine.change_state(SeekState())  
-            elif next_state == 'StayAtState':
-                state_machine.change_state(StayAtState())  
-            elif next_state == 'Eight2State':
-                state_machine.change_state(Eight2State())  
-            elif next_state == 'OvalState':
-                state_machine.change_state(OvalState())  
-            elif next_state == 'ScanState':
-                state_machine.change_state(ScanState())  
-
-    def execute(self, agent):
-        # logic to move drone to target
-        pos = self.target - agent.get_position() 
-        #print(f'distancia até target {pos.length()}')
-        ang = atan2(pos.y,pos.x)
-        e = FORWARD_SPEED / RADIUS_TARGET
-        if pi/2 - e  < ang < pi/2 + e  and self.sequence == 0 :
-            #time.sleep(1)
-            self.sequence = 1
-            self.target = agent.get_position() + vec2(300,0)
-        # inicia girando até 90 graus
-
-        if self.sequence == 0:
-            agent.seek_around(self.target)
-
-        # sai na tangente aos 90 graus
-        if self.sequence == 1:
-            agent.seek(self.target)
-            if pos.length() < 5:
-                self.target = agent.get_position() + vec2(0,RADIUS_TARGET)
-                self.sequence = 2
-                
-        # rotaciona em novo taget        
-        if self.sequence == 2:
-            agent.seek_around(self.target)
-                # se esta em -pi/2
-            if  -pi/2 - e  < ang < -pi/2 + e :
-                self.target = agent.get_position() + vec2(-300,0)
-                self.sequence = 3
-
-        # vai até ang -pi/2 do target
-        if self.sequence == 3:
-                agent.seek(self.target)
-                # chegou ao ponto, recomeça
-                if pos.length() < 5:
-                    self.target = agent.get_position() + vec2(0, -RADIUS_TARGET)
-                    self.sequence = 0
-                    self.finished = True
-
-class Eight2State(State):
-    """
-        Drone will perform a eight movement
-    """ 
-    def __init__(self):
-        self.state_name = 'Eight2'
-        # Todo: add initialization code
-        self.theta = 0 #Variavel para contagem do angulo atual  
-        print('EightState2')
-        self.target = vec2(SCREEN_WIDTH/2, SCREEN_HEIGHT/2)
-        self.sequence = 0
-        self.finished = 0 
-
-    def check_transition(self, agent, state_machine):
-        # Todo: add logic to check and execute state transition
-
-        # Transição Colidiu -> Mover para estado: Go Back
-        if agent.get_target():
-            self.target = agent.get_target()
-            agent.set_target(None)
-            self.sequence = 0 # reinicia movimento
-
-        # when executed 3 times -> new random state
-        if self.finished == 3: 
-            next_state = get_random_state()
-            if next_state == 'SeekState':
-                state_machine.change_state(SeekState())  
-            elif next_state == 'StayAtState':
-                state_machine.change_state(StayAtState())  
-            elif next_state == 'Eight2State':
-                state_machine.change_state(Eight2State())  
-            elif next_state == 'OvalState':
-                state_machine.change_state(OvalState())  
-            elif next_state == 'ScanState':
-                state_machine.change_state(ScanState())   
-
-    def execute(self, agent):
-        # logic to move drone to target
-        pos = self.target - agent.get_position() 
-        ang = atan2(pos.y,pos.x)
-        ang_corte = pi/2
-        # step error
-        e = FORWARD_SPEED / RADIUS_TARGET
-        if self.sequence == 0 :
-            # inicia girando até 90 graus
-            agent.seek_around(self.target)
-            if ang_corte - e < ang < ang_corte + e:
-                self.sequence = 1
-                # way point 2
-                self.target = agent.get_position() + vec2(2*RADIUS_TARGET,2*RADIUS_TARGET)
-        
-        # Primeira reta do X
-        if self.sequence == 1:
-            agent.seek(self.target)
-            if pos.length() < 5:
-                self.target = agent.get_position() + vec2(0,-RADIUS_TARGET)
-                self.sequence = 2
-                
-        # faz meia volta no segundo target       
-        if self.sequence == 2:
-            agent.seek_around(self.target)
-                # se esta em -pi/2
-            if  ang_corte - e < ang < ang_corte + e:
-                self.target = agent.get_position() + vec2(-2*RADIUS_TARGET,+2*RADIUS_TARGET)
-                self.sequence = 3
-
-        # vai até ang -pi/2 do target
-        if self.sequence == 3:
-                agent.seek(self.target)
-                # chegou ao ponto, recomeça
-                if pos.length() < 5:
-                    self.target = agent.get_position() + vec2(0, -RADIUS_TARGET)
-                    self.sequence = 0
-                    self.finished +=1
-
-class ScanState(State):
-    """
-        Drone will Scan a area 
-    """ 
-    def __init__(self):
-        # Todo: add initialization code
-        self.state_name = 'ScanState'
-        self.theta = 0 #Variavel para contagem do angulo atual  
-        print('ScanState')
-        self.target = vec2(300, 60)
-        self.sequence = 0
-        self.finished = False
-        self.radius = 50 
-        d = 500 # distance for a straigth line
-        # sequence of movements of behavior
-        self.waypoints = [ vec2(0,0), #origin 
-                           vec2(d, 0), 
-                           vec2(0,self.radius),
-                           vec2(-d,0), 
-                           vec2(0,self.radius),
-                           vec2(d, 0), 
-                           vec2(0, self.radius),
-                           vec2(-d, 0),
-                           vec2(0, self.radius),
-                           vec2(d,0)]
-
-    def check_transition(self, agent, state_machine):
-        # Todo: add logic to check and execute state transition
-        #if self.time_executing > 300:
-            #state_machine.change_state(SeekState())  
-
-        # Transição novo target do mouse
-        if agent.get_target():
-            self.target = agent.get_target()
-            agent.set_target(None)
-            self.sequence = 0 # reinicia movimento
-
-        if self.finished == True:
-            next_state = get_random_state()
-            if next_state == 'SeekState':
-                state_machine.change_state(SeekState())  
-            elif next_state == 'StayAtState':
-                state_machine.change_state(StayAtState())  
-            elif next_state == 'Eight2State':
-                state_machine.change_state(Eight2State())  
-            elif next_state == 'OvalState':
-                state_machine.change_state(OvalState())  
-            elif next_state == 'ScanState':
-                state_machine.change_state(ScanState())  
-
-    def check_kind_movement(self,vec):
-        """
-            This method checks the kind of movement to be porformed for the current waypoint
-        """
-        if vec.x == 0 and vec.y != 0: 
-            return 'stayat'
-        else:
-            return 'seek'
-
-    def advance_waypoint(self,agent):
-        """
-            Advance to next waypoint
-        """
-        
-        if self.sequence < len(self.waypoints) - 1:
-            self.sequence+=1
-            self.target = agent.get_position() + self.waypoints[self.sequence]
-        else:
-            self.sequence = 0  
-            self.target = vec2(300, 60)
+        if (self.target - agent.location).length() < SIZE_DRONE*2*1.4 :
             self.finished = True
-
-    def execute(self, agent):
-        # logic to move drone to target
-        pos = self.target - agent.get_position() 
-        ang = atan2(pos.y,pos.x)
-
-        # inciar sequencia
-        way_point = self.waypoints[self.sequence]
-
-        if self.check_kind_movement(way_point) == 'seek':
-            agent.seek(self.target)
-            if pos.length() < 5:
-                # chegou
-                self.advance_waypoint(agent)
-
-        else:
-            # perform rotation 
-            # e : error of the angle accepted
-            e = FORWARD_SPEED / self.radius
-            agent.seek_around(self.target,self.radius)
-            if -pi/2 - e < ang < -pi/2 + e:
-                # terminou a rotaçao, sai em -pi/2
-                self.advance_waypoint(agent)
-        
-class EightState(State):
+    
+class RandomTargetState(State):
     """
-        Drone will perform a eight movement
-        this state is not finished 
-        ** USE Eight2State
-    """ 
+        Drone will seek a random target to unblock as last resort
+    """
     def __init__(self):
-        # initialization code
-        self.state_name = 'Eight'
-        self.theta = 0 #Variavel para contagem do tempo de execução 
-        print('Eight')
-        self.target = vec2(SCREEN_WIDTH/2, SCREEN_HEIGHT/2)
-        self.c = 0
+        # Todo: add initialization code
+        self.state_name = 'RandomTargetState'
+        self.time_executing = 0 #Variavel para contagem do tempo de execução 
+        print('RandomTargetState')
+        self.finished = False
 
     def check_transition(self, agent, state_machine):
-        # logic to check and execute state transition
+        # Todo: add logic to check and execute state transition
 
-        # Transição Novo target do mouse
-        if agent.get_target():
-            self.target = agent.get_target()
-            agent.set_target(None)
+        # New target from mouse click
+        #if agent.get_target():
+            #self.target = agent.get_target()
+            #agent.set_target(None)
+            #self.sequence = 0 # reinicia movimento
 
+        # chegou ao waypoint
+        if self.finished == True:
+                state_machine.change_state(SeekState())  
+ 
+             
     def execute(self, agent):
         # logic to move drone to target
-        pos = self.target - agent.get_position() 
-        self.theta = atan2(pos.y,pos.x)
-        #print(f'angulo : {self.theta }')
-        e = FORWARD_SPEED / RADIUS_TARGET
-        if   pi - e < self.theta < pi + e and self.c == 0: 
-            self.c += 1
-            self.target += vec2(RADIUS_TARGET*2,0)
-            print(f'volta') 
+        try:
+            self.target
+        except:
+            random_position = vec2(random.uniform(-400,400),random.uniform(-400,400))
+            self.target = agent.mission_target+ random_position
 
-        if self.c == 1 and  -SAMPLE_TIME < self.theta < SAMPLE_TIME  :
-            self.target -= vec2(RADIUS_TARGET*2,0)
-            self.c = 0
-
-        agent.seek_around(self.target)
-       
+        agent.arrive(self.target)
+        self.time_executing +=SAMPLE_TIME
+        
+        if (self.target - agent.location).length() < 10 or self.time_executing > 3:
+            self.finished = True

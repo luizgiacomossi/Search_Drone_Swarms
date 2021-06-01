@@ -3,7 +3,7 @@ import pygame
 from constants import *
 from vehicle import Vehicle, VehiclePF
 from scan import ScanInterface
-from state_machine import FiniteStateMachine, SeekState, StayAtState, OvalState, Eight2State, ScanState
+from state_machine import FiniteStateMachine, SeekState
 from random import uniform
 from obstacle import Obstacles
 from utils import Npc_target
@@ -136,16 +136,17 @@ class Simulation(object):
             pygame.draw.circle(self.screenSimulation.screen,(200, 200, 200), _, radius=RADIUS_OBSTACLES*1.6 + AVOID_DISTANCE, width=1)
             
 
-
         self.time_executing += SAMPLE_TIME # count time of execution based on the sampling
         #print(self.time_executing)
 
-        if self.completed_simualtion() >= 0.8 and self.stop_watch == 0 or self.time_executing > TIME_MAX_SIMULATION:
+        if self.completed_simualtion() >= 1 and self.stop_watch == 0 or self.time_executing > TIME_MAX_SIMULATION:
             self.stop_watch = time.time()
             
             if self.rate and self.rate.next_simulation():
+                #pass
                 self.rest_simulation()
             else:
+                #pass
                 return False
 
         return True

@@ -151,7 +151,7 @@ class Aircraft(pg.sprite.Sprite):
         self.sprites = []
 
         for i in range(0,4):
-            self.sprites.append(pg.image.load(f'models/Drone_hd/sprite_{i}.png').convert())
+            self.sprites.append(pg.image.load(f'models/Drone5/sprite_{i}.png').convert())
             
 
         self.atual = 0
@@ -195,7 +195,7 @@ class Aircraft(pg.sprite.Sprite):
     
         # Rotates image -> angle should be in degrees
         # rotozoom(Surface, angle, scale) -> Surface
-        self.image = pg.transform.rotozoom(self.image, -angle*180/pi - 90, .14)
+        self.image = pg.transform.rotozoom(self.image, -angle*180/pi - 90, .12)
         self.rect = self.image.get_rect()
         # positions center of rect in acual drone position
         self.rect.center = position.x,position.y
