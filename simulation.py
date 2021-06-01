@@ -13,14 +13,24 @@ vec2 = pygame.math.Vector2
 class RateSimulation(object):
     def __init__(self, in_repetitions, in_num_swarm, in_num_obstacles, in_algorithms):
         self.current_repetition = 0
+        self.in_num_swarm = []
+        self.in_num_obstacles = []
+        self.in_algorithms = []
         
         # Inputs of Rate
         self.in_repetitions = in_repetitions * len(in_num_swarm) * len(in_num_obstacles) * len(in_algorithms)
         
-        self.in_num_obstacles = in_num_obstacles * int(self.in_repetitions/len(in_num_obstacles))
-        self.in_num_swarm = in_num_swarm * int(self.in_repetitions/len(in_num_swarm))
-        self.in_algorithms = in_algorithms * int(self.in_repetitions/len(in_algorithms))
+        res = [[i, j, k] for i in enumerate(in_num_swarm) 
+                         for j in enumerate(in_num_obstacles) 
+                         for k in enumerate(in_algorithms) ]
 
+        for r in enumerate(res):
+            print(str(r))
+            self.in_num_swarm.append(r[1][0][1])
+            self.in_num_obstacles.append(r[1][1][1])
+            self.in_algorithms.append(r[1][2][1])
+        
+        
         # Outputs of Rate
         self.out_time = []
         self.out_num_uav = []
