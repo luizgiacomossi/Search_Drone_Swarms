@@ -16,7 +16,7 @@ background_image = pygame.transform.scale(background_image,(SCREEN_WIDTH,SCREEN_
 # defines initial target
 target = vec2(random.uniform(0,SCREEN_WIDTH/2), random.uniform(0,SCREEN_HEIGHT/2))
 
-simulation = Simulation(screenSimulation, RateSimulation(5, [5,10], [DefineTargetScan()]))
+simulation = Simulation(screenSimulation, RateSimulation(1, [10,15], [10,15], [DefineTargetScan()]))
 
 run = True
 while run:
@@ -55,7 +55,7 @@ while run:
 
     for idx, time in enumerate(simulation.rate.out_time):
         try:
-            img = screenSimulation.font20.render(f'{idx+1} - Scan Time: {time:.2f}', True, LIGHT_BLUE)
+            img = screenSimulation.font20.render(f'{idx+1} - Scan Time: {time:.2f}, {simulation.rate.print_simulation_idx(idx)}', True, LIGHT_BLUE)
         except:
             img = screenSimulation.font20.render(f'{idx+1} - Scan Time: {time}', True, BLUE)
         screenSimulation.screen.blit(img, (20, 20*(idx+2)))
@@ -72,3 +72,5 @@ while run:
     
     if not run:
         pygame.time.wait(5000) 
+
+simulation.rate.print_rate()

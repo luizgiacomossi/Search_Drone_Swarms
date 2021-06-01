@@ -11,26 +11,24 @@ from utils import Npc_target
 vec2 = pygame.math.Vector2
 ##=========================
 class RateSimulation(object):
-    def __init__(self, in_repetitions, in_num_swarm, in_algorithms):
+    def __init__(self, in_repetitions, in_num_swarm, in_num_obstacles, in_algorithms):
         self.current_repetition = 0
         
         # Inputs of Rate
-        self.in_repetitions = in_repetitions * len(in_num_swarm) * len(in_algorithms)
+        self.in_repetitions = in_repetitions * len(in_num_swarm) * len(in_num_obstacles) * len(in_algorithms)
         
-        self.in_num_swarm = []
-        for n in in_num_swarm:
-            self.in_num_swarm = self.in_num_swarm + [n] * int(self.in_repetitions/len(in_num_swarm))
-        
-        self.in_algorithms = []
-        for a in in_algorithms:
-            self.in_algorithms = self.in_algorithms + [a] * int(self.in_repetitions/len(in_algorithms))
+        self.in_num_obstacles = in_num_obstacles * int(self.in_repetitions/len(in_num_obstacles))
+        self.in_num_swarm = in_num_swarm * int(self.in_repetitions/len(in_num_swarm))
+        self.in_algorithms = in_algorithms * int(self.in_repetitions/len(in_algorithms))
 
         # Outputs of Rate
         self.out_time = []
-        self.print_simulation()
+        self.out_num_uav = []
+        self.print_plan_rate()
 
-    def set_out(self, out_time):
+    def set_out(self, out_time, out_num_uav):
         self.out_time.append(out_time)
+        self.out_num_uav.append(out_num_uav)
 
     def next_simulation(self):
         if self.in_repetitions - 1 == self.current_repetition:
@@ -40,9 +38,19 @@ class RateSimulation(object):
             self.print_simulation()
             return True
 
-    def print_simulation(self):
-        print(f'{self.current_repetition+1} - num_swarm: {self.in_num_swarm[self.current_repetition]}, Algorithm: {self.in_algorithms[self.current_repetition].to_string()}')
+    def print_plan_rate(self):
+        for idx in range(0, self.in_repetitions):
+            print(f'{idx+1} - num_obstacles: {self.in_num_obstacles[idx]}, num_swarm : {self.in_num_swarm[idx]}, algorithm : {self.in_algorithms[idx].to_string()},')
 
+    def print_simulation(self):
+        return f'{self.current_repetition+1} - num_swarm: {self.in_num_swarm[self.current_repetition]}, num_obstacles: {self.in_num_obstacles[self.current_repetition]}, Algorithm: {self.in_algorithms[self.current_repetition].to_string()}'
+
+    def print_simulation_idx(self, idx):
+        return f'{idx+1} - Time: {time:.2f}, num_uav: {self.out_num_uav[idx]}, num_swarm: {self.in_num_swarm[idx]}, num_obstacles: {self.in_num_obstacles[idx]}'
+
+    def print_rate(self):
+        for idx, time in enumerate(self.out_time):
+            print(f'{idx+1} - Time: {time}, num_uav: {self.out_num_uav[idx]}, num_swarm: {self.in_num_swarm[idx]}, num_obstacles: {self.in_num_obstacles[idx]}')
 
 class ScreenSimulation(object):
 
@@ -57,7 +65,7 @@ class ScreenSimulation(object):
 
 class Simulation(object):
     
-    def __init__(self, screenSimulation,rate:RateSimulation, num_obstacles = NUM_OBSTACLES):
+    def __init__(self, screenSimulation,rate:RateSimulation):
         self.target_simulation = None
         self.screenSimulation = screenSimulation
         self.start_watch = 0
@@ -65,7 +73,7 @@ class Simulation(object):
         self.rate = rate
         self.time_executing = 0 
         # variables for obstacles
-        self.obstacles = Obstacles(num_obstacles, (SCREEN_WIDTH,SCREEN_HEIGHT))
+        self.obstacles = Obstacles(rate.in_num_obstacles[0], (SCREEN_WIDTH,SCREEN_HEIGHT))
         self.list_obst = []
         self.generate_obstacles()
         # state machines for each vehicle
@@ -139,7 +147,7 @@ class Simulation(object):
         self.time_executing += SAMPLE_TIME # count time of execution based on the sampling
         #print(self.time_executing)
 
-        if self.completed_simualtion() >= 1 and self.stop_watch == 0 or self.time_executing > TIME_MAX_SIMULATION:
+        if self.completed_simualtion() >= 0.8 and self.stop_watch == 0 or self.time_executing > TIME_MAX_SIMULATION:
             self.stop_watch = time.time()
             
             if self.rate and self.rate.next_simulation():
@@ -161,12 +169,13 @@ class Simulation(object):
 
     def rest_simulation(self):
         # new obstacles
+        self.obstacles.num_of_obstacles = self.rate.in_num_obstacles[self.rate.current_repetition]
         self.generate_obstacles()
 
         time = self.stop_watch - self.start_watch
         if self.time_executing > TIME_MAX_SIMULATION:
             time = "Goal not reached"
-        self.rate.set_out(time)
+        self.rate.set_out(time, self.completed_simualtion())
             
         for _ in self.swarm:
             _.set_target(None)
