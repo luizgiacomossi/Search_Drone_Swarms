@@ -1,6 +1,6 @@
 # Simulation Parameters
-SCREEN_WIDTH = 1400
-SCREEN_HEIGHT = 1000
+SCREEN_WIDTH = 1900
+SCREEN_HEIGHT = 800
 PIX2M = 0.01  # factor to convert from pixels to meters
 M2PIX = 100.0  # factor to convert from meters to pixels
 NUM_DRONES = 10# Number of simultaneous drones

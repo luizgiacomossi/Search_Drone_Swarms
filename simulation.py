@@ -90,11 +90,8 @@ class Simulation(object):
         for d in range(0, num_swarm):
             self.behaviors.append( FiniteStateMachine( SeekState() ) ) # Inicial state
             #using Old vehicle: steering behavior
-            drone = Vehicle(SCREEN_WIDTH*d/num_swarm, 10, self.behaviors[-1], self.screenSimulation.screen)
-            
-            #using potential fields
-            #drone = VehiclePF(SCREEN_WIDTH*d/num_swarm, 10, self.behaviors[-1], self.screenSimulation.screen)
-
+            #drone = Vehicle(SCREEN_WIDTH*d/num_swarm, 10, self.behaviors[-1], self.screenSimulation.screen)
+            drone = Vehicle(uniform(0,100), uniform(0,100), self.behaviors[-1], self.screenSimulation.screen)
             self.swarm.append(drone)
 
     def add_new_uav(self):
@@ -159,6 +156,28 @@ class Simulation(object):
                     count_completed = count_completed + 1 
         return count_completed/self.rate.in_num_swarm[self.rate.current_repetition]
 
+    def generate_new_random_target(self):
+        '''
+            Generates valid random targets from a safe distance from obstacles
+        '''
+        found_valid_target= False 
+        while not found_valid_target : 
+            # generates new point
+            target = vec2(uniform(100,SCREEN_WIDTH), uniform(100,SCREEN_HEIGHT))
+            c=0
+            #checks if it is valid
+            for o in self.list_obst:
+                # distance to obstacles
+                d = target.distance_to(o)
+                # check if ditance is not inside obstacle
+                if d < RADIUS_OBSTACLES + RADIUS_TARGET:
+                    c += 1
+            # check counter
+            if c == 0 :
+                found_valid_target = True
+                
+        return target
+        
     def rest_simulation(self):
         # new obstacles
         self.generate_obstacles()
@@ -179,5 +198,6 @@ class Simulation(object):
         self.create_swarm_uav(self.rate.in_num_swarm[self.rate.current_repetition])
         self.time_executing = 0 # Reset timer
         # set new random target for iteration
-        target = vec2(uniform(100,SCREEN_WIDTH), uniform(100,SCREEN_HEIGHT))
+        
+        target = self.generate_new_random_target()
         self.set_target(target)

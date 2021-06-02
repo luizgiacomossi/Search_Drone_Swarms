@@ -344,7 +344,8 @@ class Vehicle(object):
         aux = 0 
         closest = +inf
         for p in positions_drones:
-            d = (self.location - p.location).length()
+            d = self.location.distance_to(p.location)
+            #d = (self.location - p.location).length()
             # check closest drone in the swarm
             if d < closest:
                 self.closest_drone = p.location

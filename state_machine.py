@@ -94,7 +94,7 @@ class SeekState(State):
 
 
         # distancia percorrida desde a amostragem
-        dist = (self.memory_last_position - agent.get_position()).magnitude()
+        dist = self.memory_last_position.distance_to(agent.get_position())
 
         #self.state_name = f"{dist:.2}"
         d = (self.target - agent.get_position()).magnitude()
@@ -106,23 +106,21 @@ class SeekState(State):
         
         # printa estado no drone
         if self.finished == True:
-            self.state_name = 'Cheguei'
+            #self.state_name = 'Cheguei'
+            state_machine.change_state(SeekState())  
 
-        if dist < 30 and self.finished == False :
+        if dist < 40 and self.finished == False :
             self.time_blocked += SAMPLE_TIME
             self.state_name = f'TRAVADO: {self.time_blocked:.2f}'
             if self.time_blocked > 2:
                 state_machine.change_state(GoToClosestDroneState())  
 
-
-             
     def execute(self, agent):
         # logic to move drone to target
         try:
             self.target
         except:
             self.target = agent.mission_target
-
 
         agent.arrive(self.target)
         self.time_executing += SAMPLE_TIME
@@ -187,12 +185,6 @@ class RandomTargetState(State):
 
     def check_transition(self, agent, state_machine):
         # Todo: add logic to check and execute state transition
-
-        # New target from mouse click
-        #if agent.get_target():
-            #self.target = agent.get_target()
-            #agent.set_target(None)
-            #self.sequence = 0 # reinicia movimento
 
         # chegou ao waypoint
         if self.finished == True:
