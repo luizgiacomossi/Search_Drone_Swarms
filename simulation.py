@@ -1,7 +1,7 @@
 import time
 import pygame
 from constants import *
-from vehicle import Vehicle, VehiclePF
+from vehicle import Vehicle
 from scan import ScanInterface
 from state_machine import FiniteStateMachine, SeekState
 from random import uniform
@@ -175,7 +175,7 @@ class Simulation(object):
             # check counter
             if c == 0 :
                 found_valid_target = True
-                
+
         return target
         
     def rest_simulation(self):

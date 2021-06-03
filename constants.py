@@ -10,6 +10,7 @@ RESOLUTION = 100 # Of grid
 NUM_OBSTACLES = 30
 RADIUS_OBSTACLES = 40
 TIME_MAX_SIMULATION = 40 # Time to stop simulation in case the conditions are not completed
+AVOID_OBSTACLES = RADIUS_OBSTACLES *1.6
 
 # Sample Time Parameters
 FREQUENCY = 60.0  # simulation frequency
