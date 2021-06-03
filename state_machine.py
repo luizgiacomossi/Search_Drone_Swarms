@@ -156,7 +156,7 @@ class GoToClosestDroneState(State):
 
         # chegou ao waypoint
         if self.finished == True:
-                state_machine.change_state(SeekState())  
+            state_machine.change_state(SeekState())  
  
              
     def execute(self, agent):
