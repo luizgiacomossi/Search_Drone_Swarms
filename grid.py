@@ -18,6 +18,9 @@ class GridField(object):
         self.create_grid_cells()
 
     def create_grid_cells(self):
+        '''
+            Creates grid with cells according to resolution 
+        '''
         blockSize =  self.resolution
         for x in range(0, SCREEN_WIDTH,  blockSize):
             for y in range(0, SCREEN_HEIGHT,  blockSize):
@@ -32,6 +35,8 @@ class GridField(object):
                 rect = pg.Rect(x, y, blockSize, blockSize)
                 pg.draw.rect(screen, (120,120,120), rect, 1)
                 self.cells[f'{int(x/blockSize)},{int(y/blockSize)}'].draw_center(screen)
+                #sucessores = self.get_sucessors(  (  int(x/blockSize)  ,  int(y/blockSize)) )
+
 
     def change_state_cell(self, cell):
         '''
@@ -46,6 +51,39 @@ class GridField(object):
             return: state of the cell 
         '''
         return self.cells[f'{cell[0]},{cell[1]}'].state
+
+    def get_sucessors(self,cell):
+        """
+            Obtains a list of the 8-connected successors of the node at (i, j).
+
+            :param cell: position cell .
+            :type tuple: int.
+           
+            :return: list of the 8-connected successors.
+            :rtype: list of cells.
+        """
+        i = cell[0]
+        j = cell[1]
+        successors = []
+
+        for di in range(-1, 2):
+            for dj in range(-1, 2):
+
+                if di != 0 or dj != 0:
+                    
+                    x = i + di
+                    y = j + dj
+
+                    # if not visited
+                    if x > 0 and y > 0:
+                        if not self.get_state_cell((x, y)):
+                            successors.append((x, y))
+        
+        print(successors)
+        input()
+
+        return successors
+        
 
 class Cell():
     def __init__(self, pos, blockSize):

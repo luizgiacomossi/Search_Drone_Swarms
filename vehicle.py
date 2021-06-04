@@ -389,10 +389,11 @@ class Vehicle(object):
         for p in pos_obstacles:
             #distance to obstacle
             d = (self.location - p).length()
-            # threshold to force
+            # threshold to force action
             if ( d < dist_avoid ) :
                 f_repulsion = derivativeBivariate(factor_repulsion,factor_repulsion, p, self.location )/SAMPLE_TIME
                 f_repulsion = limit(f_repulsion,self.max_force*1.8)
+                self.applyForce(-f_repulsion)
              #----
                 # This condition checks if drone collided with wall
                 # if collided, this avoids that the drone goes over the obstacle
@@ -401,7 +402,7 @@ class Vehicle(object):
                     force_max = direction*self.max_force
                     self.applyForce(-force_max*3)
 
-                self.applyForce(-f_repulsion)
+                
 
     def get_closest_drone(self):
         return self.closest_drone

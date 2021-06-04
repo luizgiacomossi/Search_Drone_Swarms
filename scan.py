@@ -15,7 +15,7 @@ class DefineTargetScan(ScanInterface):
 
     def scan(self, simulation, list_obst):
         index = 0 # index is used to track current drone in the simulation list
-        for _ in simulation.swarm:
+        for index, _ in enumerate(simulation.swarm):
             # checks if drones colided with eachother
 
             ## collision avoindance is not implemented yet
@@ -24,7 +24,7 @@ class DefineTargetScan(ScanInterface):
             _.update()
             _.draw(simulation.screenSimulation.screen) 
             # index to keep track of  drone in the list
-            index += 1
+            #index += 1
             # writes drone id
             img = simulation.screenSimulation.font20.render(f'Drone {index}', True, LIGHT_BLUE)
             simulation.screenSimulation.screen.blit(img, _.get_position()+(0,20))
@@ -32,14 +32,14 @@ class DefineTargetScan(ScanInterface):
             img = simulation.screenSimulation.font16.render(_.behavior.get_current_state(), True, LIGHT_BLUE)
             simulation.screenSimulation.screen.blit(img, _.get_position()+(0,30))
             
-            # writes drone current position in column and row
+            # Discretized position in grid
             p = _.get_position()
             col = int(p.x/RESOLUTION) 
             row = int(p.y/RESOLUTION) 
-
+            # changes states of cell to visited 
             simulation.grid_field.change_state_cell((col,row))
             #img = simulation.screenSimulation.font16.render(f'Pos:{col},{row} state: { simulation.grid_field.get_state_cell((col,row))}', True, LIGHT_BLUE)
-           # simulation.screenSimulation.screen.blit(img, _.get_position()+(0,40))
+            #simulation.screenSimulation.screen.blit(img, _.get_position()+(0,40))
 
             if _.reached_goal(simulation.target_simulation):
                 pass

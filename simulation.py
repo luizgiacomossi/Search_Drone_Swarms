@@ -136,11 +136,11 @@ class Simulation(object):
     def run_simulation(self):
         # draw grid of visited celss
         self.grid_field.draw(self.screenSimulation.screen)
-
-        if self.target_simulation: # draw target - npc
+        # draw target - npc
+        if self.target_simulation: 
             self.all_sprites.draw(self.screenSimulation.screen)
             self.all_sprites.update(self.target_simulation,0)
-            pygame.draw.circle(self.screenSimulation.screen, (100, 100, 100), self.target_simulation, RADIUS_TARGET, 2)
+            pygame.draw.circle(self.screenSimulation.screen, LIGHT_BLUE, self.target_simulation, RADIUS_TARGET, 2)
 
 
         if self.start_watch == 0:
