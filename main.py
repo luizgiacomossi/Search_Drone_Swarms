@@ -16,7 +16,7 @@ background_image = pygame.transform.scale(background_image,(SCREEN_WIDTH,SCREEN_
 # defines initial target
 target = vec2(random.uniform(0,SCREEN_WIDTH/2), random.uniform(0,SCREEN_HEIGHT/2))
 
-simulation = Simulation(screenSimulation, RateSimulation(1, [10,15], [10,15], [DefineTargetScan()]))
+simulation = Simulation(screenSimulation, RateSimulation(1, [5,15], [10,15], [DefineTargetScan()]))
 
 run = True
 while run:
@@ -57,7 +57,7 @@ while run:
         try:
             img = screenSimulation.font20.render(f'{idx+1} - Scan Time: {time:.2f}, {simulation.rate.print_simulation_idx(idx)}', True, LIGHT_BLUE)
         except:
-            img = screenSimulation.font20.render(f'{idx+1} - Scan Time: {time}', True, BLUE)
+            img = screenSimulation.font16.render(f'{idx+1} - Scan Time: {time}', True, LIGHT_BLUE)
         screenSimulation.screen.blit(img, (20, 20*(idx+2)))
         
     # Writes the App name in screen

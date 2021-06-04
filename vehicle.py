@@ -4,6 +4,7 @@ from constants import *
 from math import cos, sin, atan2, pi, inf
 import random
 import copy 
+import numpy as np
 
 vec2 = pg.math.Vector2
 
@@ -88,6 +89,7 @@ class Vehicle(object):
             Newton's second law -> F=m.a
             You can divide by mass
         """
+        #f = limit(force , self.max_force)
         self.acceleration += force/MASS 
 
     def seek(self, target):
@@ -282,7 +284,7 @@ class Vehicle(object):
     def get_debug(self):
         return str(self.debug)
 
-    def collision_avoidance(self, all_positions, index):
+    def align_direction_with_swarm(self, all_positions, index):
         """
          This method avoids collisions with other drones
          During simulation it receives all the positions from all drones 
@@ -319,6 +321,8 @@ class Vehicle(object):
         """
             Defines shape of vehicle and draw it to screen
         """
+        if self.closest_drone :
+            pg.draw.line(self.window, self.color_target, self.location, self.closest_drone , 1)
 
         # draws track
         if len(self.memory_location) >= 2:
@@ -335,21 +339,21 @@ class Vehicle(object):
         self.all_sprites.draw(self.window)
         self.all_sprites.update(self.location,self.rotation)
 
-    def check_collision(self, positions_drones , pos_obstacles , index):
+    def collision_avoidance(self, positions_drones , pos_obstacles , index):
         """
             Not working yet, it should detect obstacles and collision with other drones
         """
         # check drones
-        f = 1
         aux = 0 
         closest = +inf
         for p in positions_drones:
-            d = self.location.distance_to(p.location)
-            #d = (self.location - p.location).length()
+            d = (self.location - p.location).magnitude()
+            #d = self.location.distance_to(p.location)
             # check closest drone in the swarm
-            if d < closest:
-                self.closest_drone = p.location
-
+            if d < closest and d>0:
+                closest = d
+                self.closest_drone = copy.deepcopy(p.location)
+                
             factor_distance = 2
             dist_avoid = AVOID_DISTANCE*factor_distance
             if ( d < dist_avoid )  and (aux != index):
@@ -363,13 +367,31 @@ class Vehicle(object):
             aux +=1
 
         # --- Repulsion obstacles 
+
+        # Calculating distance to obstcles using vectorization
+        # obstaculos = np.array(pos_obstacles)
+        # diff = self.location - obstaculos 
+        # distancias = np.linalg.norm( diff , axis = 1)
+        # factor_repulsion = 0.5
+        # dist_avoid = AVOID_OBSTACLES + AVOID_DISTANCE
+        # check_distance = [d for d in distancias if d < dist_avoid ]
+        # check_distance =  np.array(check_distance)
+        # if len(check_distance) > 0 :
+        #     k = 100
+        #     force = np.exp( -factor_repulsion*(diff[:][0])/k**2 - factor_repulsion*(diff[:][1])/k**2 )/SAMPLE_TIME
+        #     force = vec2(force[0],force[1])
+        #     f = limit(force , self.max_force)
+        #     self.applyForce(-force)
+
+
+        factor_repulsion = 0.005
+        dist_avoid = AVOID_OBSTACLES + AVOID_DISTANCE
         for p in pos_obstacles:
+            #distance to obstacle
             d = (self.location - p).length()
-            factor_repulsion = 0.005
-            dist_avoid = AVOID_OBSTACLES + AVOID_DISTANCE
+            # threshold to force
             if ( d < dist_avoid ) :
                 f_repulsion = derivativeBivariate(factor_repulsion,factor_repulsion, p, self.location )/SAMPLE_TIME
-                #print(f_repulsion)
                 f_repulsion = limit(f_repulsion,self.max_force*1.8)
              #----
                 # This condition checks if drone collided with wall
@@ -377,7 +399,7 @@ class Vehicle(object):
                 if (d < RADIUS_OBSTACLES + SIZE_DRONE):
                     direction = self.velocity.normalize()
                     force_max = direction*self.max_force
-                    self.applyForce(- force_max*2)
+                    self.applyForce(-force_max*3)
 
                 self.applyForce(-f_repulsion)
 

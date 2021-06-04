@@ -80,36 +80,32 @@ class SeekState(State):
         print('Seek')
         self.finished = False
         self.memory_last_position = vec2(inf,inf)
-        self.sampling_time = 3
+        self.sampling_time = 1
         self.time_blocked = 0
 
     def check_transition(self, agent, state_machine):
         # Todo: add logic to check and execute state transition
 
-        # New target from mouse click
+     # New target from mouse click
         if agent.get_target():
             self.target = agent.get_target()
             agent.mission_target = agent.get_target()
             agent.set_target(None)
 
-
-        # distancia percorrida desde a amostragem
+     # distancia percorrida desde a amostragem
         dist = self.memory_last_position.distance_to(agent.get_position())
-
-        #self.state_name = f"{dist:.2}"
-        d = (self.target - agent.get_position()).magnitude()
         # verifica se chegou
-        if d <= RADIUS_TARGET and d > 3 :
+        if dist<= RADIUS_TARGET and dist > 3 :
             self.finished = True
         else: # nao chegou
             self.state_name = f'buscando targeet {self.target}'
-        
-        # printa estado no drone
+
+     # Verifica se terminou a execucao
         if self.finished == True:
             #self.state_name = 'Cheguei'
             state_machine.change_state(SeekState())  
 
-        if dist < 40 and self.finished == False :
+        if dist < 60 and self.finished == False :
             self.time_blocked += SAMPLE_TIME
             self.state_name = f'TRAVADO: {self.time_blocked:.2f}'
             if self.time_blocked > 2:
@@ -129,7 +125,6 @@ class SeekState(State):
         if self.time_executing >=  self.sampling_time:
             self.time_executing = 0 
             self.memory_last_position = copy.deepcopy(agent.get_position())
-
 
 class GoToClosestDroneState(State):
     """

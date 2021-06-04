@@ -66,6 +66,7 @@ class ScreenSimulation(object):
 
     def __init__(self):
         pygame.init()
+        self.font16 = pygame.font.SysFont(None, 16)
         self.font20 = pygame.font.SysFont(None, 20)
         self.font24 = pygame.font.SysFont(None, 24)
         self.size = SCREEN_WIDTH, SCREEN_HEIGHT 
@@ -107,18 +108,12 @@ class Simulation(object):
         # Create N simultaneous Drones
         for d in range(0, num_swarm):
             self.behaviors.append( FiniteStateMachine( SeekState() ) ) # Inicial state
-            #using Old vehicle: steering behavior
-            #drone = Vehicle(SCREEN_WIDTH*d/num_swarm, 10, self.behaviors[-1], self.screenSimulation.screen)
             drone = Vehicle(uniform(0,100), uniform(0,100), self.behaviors[-1], self.screenSimulation.screen)
             self.swarm.append(drone)
 
     def add_new_uav(self):
         self.behaviors.append( FiniteStateMachine( SeekState() ) )
-         #using Old vehicle: steering behavior
         drone = Vehicle(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, self.behaviors[-1], self.screenSimulation.screen)
-
-        #using potential fields
-        #drone = VehiclePF(SCREEN_WIDTH*d/num_swarm, 10, self.behaviors[-1], self.screenSimulation.screen)
 
         drone.set_target(vec2(pygame.mouse.get_pos()[0],pygame.mouse.get_pos()[1]))
         self.append_uav(drone)
@@ -216,7 +211,7 @@ class Simulation(object):
         self.target_simulation = None
         self.create_swarm_uav(self.rate.in_num_swarm[self.rate.current_repetition])
         self.time_executing = 0 # Reset timer
+
         # set new random target for iteration
-        
         target = self.generate_new_random_target()
         self.set_target(target)

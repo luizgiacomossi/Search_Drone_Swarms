@@ -19,8 +19,8 @@ class DefineTargetScan(ScanInterface):
             # checks if drones colided with eachother
 
             ## collision avoindance is not implemented yet
-            _.collision_avoidance(simulation.swarm, index)
-            _.check_collision(simulation.swarm,list_obst,index) 
+            _.align_direction_with_swarm(simulation.swarm, index)
+            _.collision_avoidance(simulation.swarm,list_obst,index) 
             _.update()
             _.draw(simulation.screenSimulation.screen) 
             # index to keep track of  drone in the list

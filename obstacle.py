@@ -3,7 +3,7 @@ import pygame as pg
 from utils import Tree
 
 vec2 = pg.math.Vector2
-random.seed(3)
+
 
 class Obstacles(object):
     def __init__(self, num_of_obstacles, map_size):
@@ -11,7 +11,8 @@ class Obstacles(object):
         self.num_of_obstacles = num_of_obstacles
         self.map_size = map_size
         self.obst = []
-        
+        self.seed = random.seed(0)
+        self.times_generated = 0
         # Variables to draw tree using Sprites
         self.tree = Tree() 
         self.all_sprites = pg.sprite.Group()
@@ -19,7 +20,8 @@ class Obstacles(object):
         
     def generate_obstacles(self):
         self.obst = []
-        
+        self.times_generated +=1
+        self.seed = random.seed(self.times_generated )
         for _ in range(self.num_of_obstacles):
             self.obst.append(vec2(random.uniform(0,self.map_size[0]),
                                   random.uniform(100,self.map_size[1]))) 
