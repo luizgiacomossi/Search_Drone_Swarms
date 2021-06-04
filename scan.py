@@ -31,13 +31,16 @@ class DefineTargetScan(ScanInterface):
             # writes drone current behavior
             img = simulation.screenSimulation.font16.render(_.behavior.get_current_state(), True, LIGHT_BLUE)
             simulation.screenSimulation.screen.blit(img, _.get_position()+(0,30))
+            
             # writes drone current position in column and row
             p = _.get_position()
-            col = int(p.x/RESOLUTION) + 1
-            row = int(p.y/RESOLUTION) + 1
-            img = simulation.screenSimulation.font16.render(f'Pos:{col},{row}', True, LIGHT_BLUE)
-            simulation.screenSimulation.screen.blit(img, _.get_position()+(0,40))
-            
+            col = int(p.x/RESOLUTION) 
+            row = int(p.y/RESOLUTION) 
+
+            simulation.grid_field.change_state_cell((col,row))
+            #img = simulation.screenSimulation.font16.render(f'Pos:{col},{row} state: { simulation.grid_field.get_state_cell((col,row))}', True, LIGHT_BLUE)
+           # simulation.screenSimulation.screen.blit(img, _.get_position()+(0,40))
+
             if _.reached_goal(simulation.target_simulation):
                 pass
                 #print(f"Drone {index} atingiu o target")

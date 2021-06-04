@@ -7,6 +7,7 @@ from state_machine import FiniteStateMachine, SeekState
 from random import uniform
 from obstacle import Obstacles
 from utils import Npc_target
+from grid import GridField
 
 vec2 = pygame.math.Vector2
 ##=========================
@@ -83,15 +84,21 @@ class Simulation(object):
         self.stop_watch = 0
         self.rate = rate
         self.time_executing = 0 
+
         # variables for obstacles
         self.obstacles = Obstacles(rate.in_num_obstacles[0], (SCREEN_WIDTH,SCREEN_HEIGHT))
         self.list_obst = []
         self.generate_obstacles()
+
+        # Grid
+        self.grid_field = GridField(RESOLUTION)
+
         # state machines for each vehicle
         self.behaviors =[] 
         
         # Current simulations 
         self.swarm = []
+
         # npc target 
         self.npc = Npc_target()
         self.all_sprites = pygame.sprite.Group()
@@ -127,6 +134,8 @@ class Simulation(object):
             _.set_target(target)
 
     def run_simulation(self):
+        # draw grid of visited celss
+        self.grid_field.draw(self.screenSimulation.screen)
 
         if self.target_simulation: # draw target - npc
             self.all_sprites.draw(self.screenSimulation.screen)
@@ -138,8 +147,9 @@ class Simulation(object):
             self.start_watch = time.time()
 
         self.rate.in_algorithms[self.rate.current_repetition].scan(self, self.list_obst)
-        
-        for _ in self.list_obst: # draws the sprites of tree
+       
+        # draws the sprites of tree
+        for _ in self.list_obst: 
             self.obstacles.all_sprites.draw(self.screenSimulation.screen)
             self.obstacles.all_sprites.update(_,0)
             pygame.draw.circle(self.screenSimulation.screen,(200, 200, 200), _, radius=RADIUS_OBSTACLES, width=1)
@@ -149,6 +159,7 @@ class Simulation(object):
         self.time_executing += SAMPLE_TIME # count time of execution based on the sampling
         #print(self.time_executing)
 
+        # check completition of simulation
         if self.completed_simualtion() >= 0.8 and self.stop_watch == 0 or self.time_executing > TIME_MAX_SIMULATION:
             self.stop_watch = time.time()
             
@@ -192,6 +203,9 @@ class Simulation(object):
         return target
         
     def rest_simulation(self):
+        # reset grid 
+        self.grid_field = GridField(RESOLUTION)
+
         # new obstacles
         self.obstacles.num_of_obstacles = self.rate.in_num_obstacles[self.rate.current_repetition]
         self.generate_obstacles()
