@@ -29,14 +29,14 @@ class DefineTargetScan(ScanInterface):
             img = simulation.screenSimulation.font20.render(f'Drone {index}', True, LIGHT_BLUE)
             simulation.screenSimulation.screen.blit(img, _.get_position()+(0,20))
             # writes drone current behavior
-            img = simulation.screenSimulation.font20.render(_.behavior.get_current_state(), True, BLUE)
+            img = simulation.screenSimulation.font16.render(_.behavior.get_current_state(), True, LIGHT_BLUE)
             simulation.screenSimulation.screen.blit(img, _.get_position()+(0,30))
             # writes drone current position in column and row
             p = _.get_position()
             col = int(p.x/RESOLUTION) + 1
             row = int(p.y/RESOLUTION) + 1
-            #img = simulation.screenSimulation.font20.render(f'Pos:{col},{row}', True, BLUE)
-            #simulation.screenSimulation.screen.blit(img, _.get_position()+(0,40))
+            img = simulation.screenSimulation.font16.render(f'Pos:{col},{row}', True, LIGHT_BLUE)
+            simulation.screenSimulation.screen.blit(img, _.get_position()+(0,40))
             
             if _.reached_goal(simulation.target_simulation):
                 pass

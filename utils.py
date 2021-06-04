@@ -216,7 +216,7 @@ class FlowField():
         for x in range(0, SCREEN_WIDTH, blockSize):
             for y in range(0, SCREEN_HEIGHT, blockSize):
                 rect = pg.Rect(x, y, blockSize, blockSize)
-                pg.draw.rect(screen, (200,200,200), rect, 1)
+                pg.draw.rect(screen, (100,100,100), rect, 1)
 
 class Npc_target(pg.sprite.Sprite):
     """

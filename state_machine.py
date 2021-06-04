@@ -156,10 +156,8 @@ class GoToClosestDroneState(State):
              
     def execute(self, agent):
         # logic to move drone to target
-        try:
-            self.target
-        except:
-            self.target = agent.get_closest_drone()
+
+        self.target = agent.get_closest_drone()
 
         agent.arrive(self.target)
         self.time_executing +=SAMPLE_TIME

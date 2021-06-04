@@ -2,10 +2,10 @@ import sys, pygame
 from constants import *
 import random 
 import copy
-from utils import FlowField
 from scan import DefineTargetScan
 from obstacle import Obstacles
 from simulation import Simulation, ScreenSimulation, RateSimulation
+from grid import FlowField
 
 vec2 = pygame.math.Vector2
 ##=========================
@@ -17,6 +17,9 @@ background_image = pygame.transform.scale(background_image,(SCREEN_WIDTH,SCREEN_
 target = vec2(random.uniform(0,SCREEN_WIDTH/2), random.uniform(0,SCREEN_HEIGHT/2))
 
 simulation = Simulation(screenSimulation, RateSimulation(1, [5,15], [10,15], [DefineTargetScan()]))
+
+flow_field = FlowField(RESOLUTION)
+
 
 run = True
 while run:
@@ -48,7 +51,7 @@ while run:
     screenSimulation.screen.blit(background_image, [0, 0])
 
     # draw grid
-    #flow_field.draw(screen)
+    flow_field.draw(screenSimulation.screen)
 
     # updates and draws all simulations  
     run = simulation.run_simulation()
