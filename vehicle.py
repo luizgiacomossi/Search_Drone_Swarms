@@ -402,8 +402,6 @@ class Vehicle(object):
                     force_max = direction*self.max_force
                     self.applyForce(-force_max*3)
 
-                
-
     def get_closest_drone(self):
         return self.closest_drone
     

@@ -59,6 +59,13 @@ class SnookerScan(ScanInterface):
     def scan(self, simulation, list_obst):
         pass
 
+class RowScan(ScanInterface):
+    def to_string(self) -> str:
+        return 'RowScan'
+
+    def scan(self, simulation, list_obst):
+        pass
+
 class MeshScan(ScanInterface):
     def to_string(self) -> str:
         return 'MeshScan'

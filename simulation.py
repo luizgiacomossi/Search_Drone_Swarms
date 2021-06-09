@@ -136,6 +136,7 @@ class Simulation(object):
     def run_simulation(self):
         # draw grid of visited celss
         self.grid_field.draw(self.screenSimulation.screen)
+        
         # draw target - npc
         if self.target_simulation: 
             self.all_sprites.draw(self.screenSimulation.screen)
@@ -160,7 +161,7 @@ class Simulation(object):
         #print(self.time_executing)
 
         # check completition of simulation
-        if self.completed_simualtion() >= 0.8 and self.stop_watch == 0 or self.time_executing > TIME_MAX_SIMULATION:
+        if self.completed_simulation() >= 0.8 and self.stop_watch == 0 or self.time_executing > TIME_MAX_SIMULATION:
             self.stop_watch = time.time()
             
             if self.rate and self.rate.next_simulation():
@@ -172,7 +173,7 @@ class Simulation(object):
 
         return True
 
-    def completed_simualtion(self):
+    def completed_simulation(self):
         count_completed = 0
         if self.target_simulation:
             for _ in self.swarm:
@@ -213,7 +214,7 @@ class Simulation(object):
         time = self.stop_watch - self.start_watch
         if self.time_executing > TIME_MAX_SIMULATION:
             time = "Goal not reached"
-        self.rate.set_out(time, self.completed_simualtion())
+        self.rate.set_out(time, self.completed_simulation())
             
         for _ in self.swarm:
             _.set_target(None)

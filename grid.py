@@ -12,7 +12,7 @@ class GridField(object):
         self.cols =int(SCREEN_WIDTH/resolution)  # Columns of the grid
         self.rows = int(SCREEN_HEIGHT/resolution)  # Rows of the grid
         self.resolution = resolution # Resolution of grid relative to window width and height in pixels
-
+        print(f' Grid created with  col:{self.cols} row:{self.rows}')
         self.field = [[vec(random.uniform(0,1),random.uniform(0,1)) for col in range(self.cols)] for row in range(self.rows)] # create matrix 
         self.cells = {}
         self.create_grid_cells()
@@ -25,6 +25,7 @@ class GridField(object):
         for x in range(0, SCREEN_WIDTH,  blockSize):
             for y in range(0, SCREEN_HEIGHT,  blockSize):
                 self.cells[f'{int(x/blockSize)},{int(y/blockSize)}'] = Cell(vec(x,y), blockSize)
+                #sucessores = self.get_sucessors(  (  int(x/blockSize)  ,  int(y/blockSize)) )
 
     def draw(self, screen):
 
@@ -35,8 +36,6 @@ class GridField(object):
                 rect = pg.Rect(x, y, blockSize, blockSize)
                 pg.draw.rect(screen, (120,120,120), rect, 1)
                 self.cells[f'{int(x/blockSize)},{int(y/blockSize)}'].draw_center(screen)
-                #sucessores = self.get_sucessors(  (  int(x/blockSize)  ,  int(y/blockSize)) )
-
 
     def change_state_cell(self, cell):
         '''
@@ -69,7 +68,7 @@ class GridField(object):
         for di in range(-1, 2):
             for dj in range(-1, 2):
 
-                if di != 0 or dj != 0:
+                if di != 0 and dj != 0:
                     
                     x = i + di
                     y = j + dj
