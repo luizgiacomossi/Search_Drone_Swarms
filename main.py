@@ -16,7 +16,7 @@ background_image = pygame.transform.scale(background_image,(SCREEN_WIDTH,SCREEN_
 # defines initial target
 target = vec2(random.uniform(0,SCREEN_WIDTH/2), random.uniform(0,SCREEN_HEIGHT/2))
 
-simulation = Simulation(screenSimulation, RateSimulation(1, [5,15], [10,15], [DefineTargetScan()]))
+simulation = Simulation(screenSimulation, RateSimulation(1, [5,15], [10,15,20,30], [DefineTargetScan()]))
 
 run = True
 while run:

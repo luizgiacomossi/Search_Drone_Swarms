@@ -55,6 +55,11 @@ class Vehicle(object):
         self.all_sprites = pg.sprite.Group()
         self.all_sprites.add(self.drone)
 
+        # variables to search in grid
+        self.position_in_grid = (0,0)
+        self.grid_map = None
+        self.found = False
+
     def reached_goal(self, target):
         return target and (target - self.location).length() <= RADIUS_TARGET 
     
@@ -405,6 +410,16 @@ class Vehicle(object):
     def get_closest_drone(self):
         return self.closest_drone
     
+    def set_position_in_grid(self,x,y):
+        # x,y in grid cell
+        self.position_in_grid = (x,y)
+
+    def get_position_in_grid(self):
+        return self.position_in_grid 
+
+    def save_grid(self, grid):
+        self.grid_map = grid
+
     # Deleting (Calling destructor)
     def __del__(self):
         print('Drone Deleted')

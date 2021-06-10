@@ -98,7 +98,7 @@ class SeekState(State):
         if dist<= RADIUS_TARGET and dist > 3 :
             self.finished = True
         else: # nao chegou
-            self.state_name = f'buscando targeet {self.target}'
+            self.state_name = f'buscando target: {self.target}'
 
      # Verifica se terminou a execucao
         if self.finished == True:
@@ -198,4 +198,52 @@ class RandomTargetState(State):
         if (self.target - agent.location).length() < 10 or self.time_executing > 3:
             self.finished = True
 
+class SearchTargetState(State):
+    """
+        Drone will seek a random target to unblock as last resort
+    """
+    def __init__(self):
+        # Todo: add initialization code
+        self.state_name = 'SearchTargetState'
+        self.time_executing = 0 #Variavel para contagem do tempo de execução 
+        #print('SearchTargetState')
+        self.finished = False
 
+        # Map resolution
+        self.cols =int(SCREEN_WIDTH/RESOLUTION)  # Columns of the grid
+        self.rows = int(SCREEN_HEIGHT/RESOLUTION)  # Rows of the grid
+        
+        # waypoints to be followed
+        self.waypoints = [ vec2(0,0) , vec2( SCREEN_WIDTH - 100, 0 ) , vec2( 0, RESOLUTION ) ]
+        self.next_waypoint = 0 
+
+    def check_transition(self, agent, state_machine):
+        # Todo: add logic to check and execute state transition
+
+        # chegou ao waypoint
+        if self.finished == True:
+            state_machine.change_state(SeekState())  
+ 
+             
+    def execute(self, agent):
+        # logic to move drone to target
+        try: # verifica se o drone já te um target ou seja, uma coluna a cobrir
+            self.target
+        except: # nao tem, logo:
+            self.target = agent.mission_target
+            self.grid_map = agent.grid_map
+
+
+        self.target = self.waypoints[self.next_waypoint] + agent.mission_target
+        self.state_name = f'buscando target: {self.target}'
+
+        agent.arrive(self.target)
+        self.time_executing +=SAMPLE_TIME
+        
+        if (self.target - agent.location).length() < RADIUS_OBSTACLES :
+            self.next_waypoint += 1
+            if self.next_waypoint > len(self.waypoints) -1:
+                self.next_waypoint = 0 
+
+        if agent.found:
+            self.finished = True

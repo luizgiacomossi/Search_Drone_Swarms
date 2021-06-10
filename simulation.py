@@ -1,13 +1,15 @@
 import time
 import pygame
+import math
 from constants import *
 from vehicle import Vehicle
 from scan import ScanInterface
-from state_machine import FiniteStateMachine, SeekState
+from state_machine import FiniteStateMachine, SeekState, SearchTargetState
 from random import uniform
 from obstacle import Obstacles
 from utils import Npc_target
 from grid import GridField
+import numpy as np
 
 vec2 = pygame.math.Vector2
 ##=========================
@@ -64,7 +66,9 @@ class RateSimulation(object):
             print(f'{idx+1} - Time: {time}, num_uav: {self.out_num_uav[idx]}, num_swarm: {self.in_num_swarm[idx]}, num_obstacles: {self.in_num_obstacles[idx]}')
 
 class ScreenSimulation(object):
-
+    '''
+        Class responsable to represent the screen variables
+    ''' 
     def __init__(self):
         pygame.init()
         self.font16 = pygame.font.SysFont(None, 16)
@@ -73,7 +77,6 @@ class ScreenSimulation(object):
         self.size = SCREEN_WIDTH, SCREEN_HEIGHT 
         self.clock = pygame.time.Clock()
         self.screen = pygame.display.set_mode(self.size)
-
 
 class Simulation(object):
     
@@ -84,7 +87,7 @@ class Simulation(object):
         self.stop_watch = 0
         self.rate = rate
         self.time_executing = 0 
-
+        self.found = False
         # variables for obstacles
         self.obstacles = Obstacles(rate.in_num_obstacles[0], (SCREEN_WIDTH,SCREEN_HEIGHT))
         self.list_obst = []
@@ -98,13 +101,17 @@ class Simulation(object):
         
         # Current simulations 
         self.swarm = []
-
+        self.targets_search = []
         # npc target 
         self.npc = Npc_target()
         self.all_sprites = pygame.sprite.Group()
         self.all_sprites.add(self.npc)
 
         self.create_swarm_uav(rate.in_num_swarm[0])
+
+        # target 
+        self.target_simulation = self.generate_new_random_target()
+        self.set_target_using_search_pattern(self.target_simulation)
 
     def generate_obstacles(self):
         # Generates obstacles
@@ -114,7 +121,8 @@ class Simulation(object):
     def create_swarm_uav(self, num_swarm):
         # Create N simultaneous Drones
         for d in range(0, num_swarm):
-            self.behaviors.append( FiniteStateMachine( SeekState() ) ) # Inicial state
+            # voltar para seekstate para buscar com click do mouse e target conhecido
+            self.behaviors.append( FiniteStateMachine( SearchTargetState() ) ) # Inicial state
             drone = Vehicle(uniform(0,100), uniform(0,100), self.behaviors[-1], self.screenSimulation.screen)
             self.swarm.append(drone)
 
@@ -128,15 +136,64 @@ class Simulation(object):
     def append_uav(self, drone):
         self.swarm.append(drone)
 
-    def set_target(self, target):
+    def set_target(self, target, found=False):
         self.target_simulation = target
         for _ in self.swarm:
             _.set_target(target)
+            if found == True:
+                _.found = True
 
+    def set_target_using_search_pattern(self, target):
+        '''
+            IN TEST
+            Set target area to be search  
+        '''
+        # saves global target
+        self.target_simulation = target
+
+        # get #row and #col
+        col = self.grid_field.cols
+        row = self.grid_field.rows
+
+        table_search = np.zeros((row,col))
+        num_drones = len(self.swarm)
+
+        step = math.ceil(row/num_drones)
+        r=0
+        c=0
+        col_ = col 
+
+        while num_drones > 0 :
+            # self.swarm.set_target() - argumento é o target referente a celular
+            # pegar a posicao do centro da celula
+            cell_center = self.grid_field.cells[r][c].get_cell_center()
+            self.swarm[num_drones-1].set_target( vec2(  cell_center[0], cell_center[1] )) 
+            self.swarm[num_drones-1].mission_target = vec2(  cell_center[0], cell_center[1] )
+            print(f'drone: {num_drones} celula: {(r,c,step)} {vec2(  cell_center[0], cell_center[1] )}')
+
+            table_search[r][c]  = num_drones
+            num_drones -= 1
+            
+            # verifica se o passo não vai passar o limite de linhas da matriz
+            if r < row - step:
+                r += step
+                
+            else:
+                r = 0 
+                col_ = math.floor(col_/2)
+                c+= col_
+                
+        print(table_search)
+        self.table_search = table_search
+      
     def run_simulation(self):
         # draw grid of visited celss
         self.grid_field.draw(self.screenSimulation.screen)
         
+        # Target is Found: pass it to all drones
+        if self.found:
+            self.set_target(self.target_simulation, found = True)
+
         # draw target - npc
         if self.target_simulation: 
             self.all_sprites.draw(self.screenSimulation.screen)
@@ -147,6 +204,7 @@ class Simulation(object):
         if self.start_watch == 0:
             self.start_watch = time.time()
 
+        # for every drone, it will update the collision avoidace, aling the direction and draw current position in simuation
         self.rate.in_algorithms[self.rate.current_repetition].scan(self, self.list_obst)
        
         # draws the sprites of tree
@@ -161,7 +219,7 @@ class Simulation(object):
         #print(self.time_executing)
 
         # check completition of simulation
-        if self.completed_simulation() >= 0.8 and self.stop_watch == 0 or self.time_executing > TIME_MAX_SIMULATION:
+        if self.completed_simulation() >= 0.9 and self.stop_watch == 0 or self.time_executing > TIME_MAX_SIMULATION:
             self.stop_watch = time.time()
             
             if self.rate and self.rate.next_simulation():
@@ -188,7 +246,7 @@ class Simulation(object):
         found_valid_target= False 
         while not found_valid_target : 
             # generates new point
-            target = vec2(uniform(100,SCREEN_WIDTH), uniform(100,SCREEN_HEIGHT))
+            target = vec2(uniform(SCREEN_WIDTH/3,SCREEN_WIDTH), uniform(100,SCREEN_HEIGHT))
             c=0
             #checks if it is valid
             for o in self.list_obst:
@@ -230,3 +288,7 @@ class Simulation(object):
         # set new random target for iteration
         target = self.generate_new_random_target()
         self.set_target(target)
+
+        # TESTING NEW ALGORITHM TO SEARCH PATTERN
+        self.set_target_using_search_pattern(target)
+        self.found = False

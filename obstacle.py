@@ -1,6 +1,7 @@
 import random
 import pygame as pg
 from utils import Tree
+from constants import *
 
 vec2 = pg.math.Vector2
 
@@ -23,7 +24,7 @@ class Obstacles(object):
         self.times_generated += 1
         self.seed = random.seed(self.times_generated+10 )
         for _ in range(self.num_of_obstacles):
-            self.obst.append(vec2(random.uniform(0,self.map_size[0]),
+            self.obst.append(vec2(random.uniform(RESOLUTION*2,self.map_size[0]),
                                   random.uniform(100,self.map_size[1]))) 
                                   
     def get_coordenates(self):

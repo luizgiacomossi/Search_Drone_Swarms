@@ -26,7 +26,7 @@ class DefineTargetScan(ScanInterface):
             # index to keep track of  drone in the list
             #index += 1
             # writes drone id
-            img = simulation.screenSimulation.font20.render(f'Drone {index}', True, LIGHT_BLUE)
+            img = simulation.screenSimulation.font20.render(f'Drone {index+1}', True, LIGHT_BLUE)
             simulation.screenSimulation.screen.blit(img, _.get_position()+(0,20))
             # writes drone current behavior
             img = simulation.screenSimulation.font16.render(_.behavior.get_current_state(), True, LIGHT_BLUE)
@@ -38,12 +38,15 @@ class DefineTargetScan(ScanInterface):
             row = int(p.y/RESOLUTION) 
             # changes states of cell to visited 
             simulation.grid_field.change_state_cell((col,row))
-            #img = simulation.screenSimulation.font16.render(f'Pos:{col},{row} state: { simulation.grid_field.get_state_cell((col,row))}', True, LIGHT_BLUE)
-            #simulation.screenSimulation.screen.blit(img, _.get_position()+(0,40))
+            _.set_position_in_grid(col,row)
+            _.save_grid(simulation.grid_field)
+
+            img = simulation.screenSimulation.font16.render(f'Pos:{col},{row}', True, LIGHT_BLUE)
+            simulation.screenSimulation.screen.blit(img, _.get_position()+(0,40))
 
             if _.reached_goal(simulation.target_simulation):
-                pass
                 #print(f"Drone {index} atingiu o target")
+                simulation.found = True
 
 class RandoWalkScan(ScanInterface):
     def to_string(self) -> str:
@@ -64,7 +67,42 @@ class RowScan(ScanInterface):
         return 'RowScan'
 
     def scan(self, simulation, list_obst):
+        index = 0 # index is used to track current drone in the simulation list
+        for index, _ in enumerate(simulation.swarm):
+            # checks if drones colided with eachother
+
+            ## collision avoindance is not implemented yet
+            _.align_direction_with_swarm(simulation.swarm, index)
+            _.collision_avoidance(simulation.swarm,list_obst,index) 
+            _.update()
+            _.draw(simulation.screenSimulation.screen) 
+            # index to keep track of  drone in the list
+            #index += 1
+            # writes drone id
+            img = simulation.screenSimulation.font20.render(f'Drone {index+1}', True, LIGHT_BLUE)
+            simulation.screenSimulation.screen.blit(img, _.get_position()+(0,20))
+            # writes drone current behavior
+            img = simulation.screenSimulation.font16.render(_.behavior.get_current_state(), True, LIGHT_BLUE)
+            simulation.screenSimulation.screen.blit(img, _.get_position()+(0,30))
+            
+            # Discretized position in grid
+            p = _.get_position()
+            col = int(p.x/RESOLUTION) 
+            row = int(p.y/RESOLUTION) 
+            # changes states of cell to visited 
+            simulation.grid_field.change_state_cell((col,row))
+            _.set_position_in_grid(col,row)
+
+            img = simulation.screenSimulation.font16.render(f'Pos:{col},{row}', True, LIGHT_BLUE)
+            simulation.screenSimulation.screen.blit(img, _.get_position()+(0,40))
+
+            if _.reached_goal(simulation.target_simulation):
+                pass
+                #print(f"Drone {index} atingiu o target")
+
+    def define_search_area(self):
         pass
+
 
 class MeshScan(ScanInterface):
     def to_string(self) -> str:
