@@ -133,6 +133,26 @@ class Vehicle(object):
         # Draws current target as a point 
         pg.draw.circle(self.window, self.color_target ,target ,5, 0)
 
+    def arrive_pv(self, target):
+        """
+            Arrive using position controler PV
+        """
+        # Calculates vector desired position
+        #kp = 0.0024
+        #kp = 50
+        #kv = 800
+        xi=0.7
+        wn=10/60
+        kv = 2*MASS*xi*wn
+        kp = MASS*wn**2
+        self.desired = kp * (target - self.location) - kv * self.velocity
+
+        a_desired =  limit(self.desired, self.max_force)
+
+        self.applyForce(a_desired)
+        # Draws current target as a point 
+        pg.draw.circle(self.window, self.color_target ,target ,5, 0)
+
     def arrive(self, target):
         """
             Arrive Steering Behavior
@@ -346,7 +366,7 @@ class Vehicle(object):
 
     def collision_avoidance(self, positions_drones , pos_obstacles , index):
         """
-            Not working yet, it should detect obstacles and collision with other drones
+          Avoid obstacles and collision with other drones
         """
         # check drones
         aux = 0 
@@ -388,7 +408,6 @@ class Vehicle(object):
         #     f = limit(force , self.max_force)
         #     self.applyForce(-force)
 
-
         factor_repulsion = 0.005
         dist_avoid = AVOID_OBSTACLES + AVOID_DISTANCE
         for p in pos_obstacles:
@@ -404,8 +423,9 @@ class Vehicle(object):
                 # if collided, this avoids that the drone goes over the obstacle
                 if (d < RADIUS_OBSTACLES + SIZE_DRONE):
                     direction = self.velocity.normalize()
-                    force_max = direction*self.max_force
-                    self.applyForce(-force_max*3)
+                    self.velocity *= -0.5
+                    #force_max = direction*self.max_force/0.5
+                    #self.applyForce(-force_max)
 
     def get_closest_drone(self):
         return self.closest_drone
@@ -421,5 +441,5 @@ class Vehicle(object):
         self.grid_map = grid
 
     # Deleting (Calling destructor)
-    def __del__(self):
-        print('Drone Deleted')
+    #def __del__(self):
+        #print('Drone Deleted')

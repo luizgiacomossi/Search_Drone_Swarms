@@ -23,12 +23,20 @@ class Obstacles(object):
         self.obst = []
         self.times_generated += 1
         self.seed = random.seed(self.times_generated+10 )
+        valid = False
         for _ in range(self.num_of_obstacles):
-            self.obst.append(vec2(random.uniform(RESOLUTION*2,self.map_size[0]),
-                                  random.uniform(100,self.map_size[1]))) 
+            coord = vec2(random.uniform(200,self.map_size[0] + AVOID_OBSTACLES),
+                        random.uniform(RADIUS_TARGET,self.map_size[1])- AVOID_OBSTACLES)
+
+            self.obst.append(coord) 
                                   
     def get_coordenates(self):
         return self.obst
+
+    def reset_seed(self):
+        self.seed = random.seed(0)
+        self.times_generated = 0
+        
 
     def draw(self):
         self.all_sprites.draw(self.window)

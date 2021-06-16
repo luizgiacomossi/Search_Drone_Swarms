@@ -33,7 +33,6 @@ class RateSimulation(object):
             self.in_num_obstacles.append(r[1][1][1])
             self.in_algorithms.append(r[1][2][1])
         
-        
         # Outputs of Rate
         self.out_time = []
         self.out_num_uav = []
@@ -67,7 +66,7 @@ class RateSimulation(object):
 
 class ScreenSimulation(object):
     '''
-        Class responsable to represent the screen variables
+        Class responsable to represent the canvas variables
     ''' 
     def __init__(self):
         pygame.init()
@@ -96,12 +95,13 @@ class Simulation(object):
         # Grid
         self.grid_field = GridField(RESOLUTION)
 
-        # state machines for each vehicle
+        # state machines for controlling drones
         self.behaviors =[] 
         
         # Current simulations 
         self.swarm = []
-        self.targets_search = []
+        self.targets_search = [] # memory of targets used in simulations
+
         # npc target 
         self.npc = Npc_target()
         self.all_sprites = pygame.sprite.Group()
@@ -111,18 +111,24 @@ class Simulation(object):
 
         # target 
         self.target_simulation = self.generate_new_random_target()
-        self.set_target_using_search_pattern(self.target_simulation)
+        self.targets_search.append(self.target_simulation)
+
+        #self.set_target_using_search_pattern(self.target_simulation)
 
     def generate_obstacles(self):
         # Generates obstacles
         self.obstacles.generate_obstacles()
         self.list_obst = self.obstacles.get_coordenates()
 
-    def create_swarm_uav(self, num_swarm):
+    def create_swarm_uav(self, num_swarm, search_pattern = 'DefineTargetScan'):
         # Create N simultaneous Drones
         for d in range(0, num_swarm):
-            # voltar para seekstate para buscar com click do mouse e target conhecido
-            self.behaviors.append( FiniteStateMachine( SearchTargetState() ) ) # Inicial state
+            # Seek state: se tem o target inicialmente:
+            if search_pattern == 'DefineTargetScan':
+                self.behaviors.append( FiniteStateMachine( SeekState() ) ) # Inicial state
+            else:
+                self.behaviors.append( FiniteStateMachine( SearchTargetState() ) ) # Inicial state
+
             drone = Vehicle(uniform(0,100), uniform(0,100), self.behaviors[-1], self.screenSimulation.screen)
             self.swarm.append(drone)
 
@@ -143,13 +149,13 @@ class Simulation(object):
             if found == True:
                 _.found = True
 
-    def set_target_using_search_pattern(self, target):
+    def set_target_using_search_pattern(self, target_simulation):
         '''
             IN TEST
             Set target area to be search  
         '''
         # saves global target
-        self.target_simulation = target
+        self.target_simulation = target_simulation
 
         # get #row and #col
         col = self.grid_field.cols
@@ -167,9 +173,11 @@ class Simulation(object):
             # self.swarm.set_target() - argumento é o target referente a celular
             # pegar a posicao do centro da celula
             cell_center = self.grid_field.cells[r][c].get_cell_center()
-            self.swarm[num_drones-1].set_target( vec2(  cell_center[0], cell_center[1] )) 
-            self.swarm[num_drones-1].mission_target = vec2(  cell_center[0], cell_center[1] )
-            print(f'drone: {num_drones} celula: {(r,c,step)} {vec2(  cell_center[0], cell_center[1] )}')
+            drone_target =  vec2(  cell_center[0], cell_center[1] )
+            self.swarm[num_drones-1].set_target( drone_target ) 
+            self.swarm[num_drones-1].mission_target = vec2(  drone_target )
+            
+            #print(f'drone: {num_drones} celula: {(r,c,step)} {vec2(  cell_center[0], cell_center[1] )}')
 
             table_search[r][c]  = num_drones
             num_drones -= 1
@@ -177,29 +185,44 @@ class Simulation(object):
             # verifica se o passo não vai passar o limite de linhas da matriz
             if r < row - step:
                 r += step
-                
             else:
                 r = 0 
                 col_ = math.floor(col_/2)
                 c+= col_
                 
-        print(table_search)
+        #print(table_search)
         self.table_search = table_search
       
-    def run_simulation(self):
-        # draw grid of visited celss
-        self.grid_field.draw(self.screenSimulation.screen)
-        
-        # Target is Found: pass it to all drones
-        if self.found:
-            self.set_target(self.target_simulation, found = True)
+    def draw_obstacles(self):
+        # draws the sprites of tree
+        for _ in self.list_obst: 
+            self.obstacles.all_sprites.draw(self.screenSimulation.screen)
+            self.obstacles.all_sprites.update(_,0)
+            pygame.draw.circle(self.screenSimulation.screen,(200, 200, 200), _, radius=RADIUS_OBSTACLES, width=1)
+            pygame.draw.circle(self.screenSimulation.screen,(200, 200, 200), _, radius=RADIUS_OBSTACLES*1.6 + AVOID_DISTANCE, width=1)
 
+    def draw_target(self):
         # draw target - npc
         if self.target_simulation: 
             self.all_sprites.draw(self.screenSimulation.screen)
             self.all_sprites.update(self.target_simulation,0)
             pygame.draw.circle(self.screenSimulation.screen, LIGHT_BLUE, self.target_simulation, RADIUS_TARGET, 2)
 
+    def draw(self):
+        #draw grid of visited celss
+        self.grid_field.draw(self.screenSimulation.screen)
+        # draw target - npc
+        self.draw_target()
+        # draw obstacles
+        self.draw_obstacles()
+
+    def run_simulation(self):
+        # draw grid of visited cels, target and obstacles
+        self.draw()
+
+        # Target is Found: pass it to all drones
+        if self.found:
+            self.set_target(self.target_simulation, found = True)
 
         if self.start_watch == 0:
             self.start_watch = time.time()
@@ -207,32 +230,22 @@ class Simulation(object):
         # for every drone, it will update the collision avoidace, aling the direction and draw current position in simuation
         self.rate.in_algorithms[self.rate.current_repetition].scan(self, self.list_obst)
        
-        # draws the sprites of tree
-        for _ in self.list_obst: 
-            self.obstacles.all_sprites.draw(self.screenSimulation.screen)
-            self.obstacles.all_sprites.update(_,0)
-            pygame.draw.circle(self.screenSimulation.screen,(200, 200, 200), _, radius=RADIUS_OBSTACLES, width=1)
-            pygame.draw.circle(self.screenSimulation.screen,(200, 200, 200), _, radius=RADIUS_OBSTACLES*1.6 + AVOID_DISTANCE, width=1)
-            
-
         self.time_executing += SAMPLE_TIME # count time of execution based on the sampling
-        #print(self.time_executing)
 
         # check completition of simulation
-        if self.completed_simulation() >= 0.9 and self.stop_watch == 0 or self.time_executing > TIME_MAX_SIMULATION:
+        if self.completed_simulation() >= 0.8 and self.stop_watch == 0 or self.time_executing > TIME_MAX_SIMULATION:
             self.stop_watch = time.time()
             
             if self.rate and self.rate.next_simulation():
-                #pass
                 self.rest_simulation()
             else:
-                #pass
                 return False
 
         return True
 
     def completed_simulation(self):
         count_completed = 0
+
         if self.target_simulation:
             for _ in self.swarm:
                 if _.reached_goal(self.target_simulation):
@@ -267,6 +280,11 @@ class Simulation(object):
 
         # new obstacles
         self.obstacles.num_of_obstacles = self.rate.in_num_obstacles[self.rate.current_repetition]
+        # Repeat scenario for new number of drones
+        num_repet = self.rate.in_repetitions / len(self.rate.in_num_swarm)
+        if self.rate.current_repetition > num_repet -1:
+            self.obstacles.reset_seed()
+
         self.generate_obstacles()
 
         time = self.stop_watch - self.start_watch
@@ -282,13 +300,16 @@ class Simulation(object):
         self.start_watch = 0
         self.stop_watch = 0
         self.target_simulation = None
-        self.create_swarm_uav(self.rate.in_num_swarm[self.rate.current_repetition])
+        serch_patter_for_iteration = self.rate.in_algorithms[self.rate.current_repetition].to_string()
+        print(f'ITERATION USING: {serch_patter_for_iteration} ')
+        self.create_swarm_uav(self.rate.in_num_swarm[self.rate.current_repetition], serch_patter_for_iteration)
         self.time_executing = 0 # Reset timer
 
         # set new random target for iteration
         target = self.generate_new_random_target()
+        self.targets_search.append(target)
         self.set_target(target)
 
-        # TESTING NEW ALGORITHM TO SEARCH PATTERN
-        self.set_target_using_search_pattern(target)
+        # Prepare ALGORITHM TO SEARCH PATTERN
+        self.rate.in_algorithms[self.rate.current_repetition].prepare_simulation(self, target)
         self.found = False

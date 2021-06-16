@@ -7,6 +7,9 @@ import pygame
 import time
 import copy 
 
+NOT_VISITED = 0      
+VISITED = 1
+OBSTACLE = 2
 vec2 = pygame.math.Vector2
 
 def get_random_state():
@@ -80,7 +83,7 @@ class SeekState(State):
         print('Seek')
         self.finished = False
         self.memory_last_position = vec2(inf,inf)
-        self.sampling_time = 1
+        self.sampling_time = 3
         self.time_blocked = 0
 
     def check_transition(self, agent, state_machine):
@@ -92,23 +95,27 @@ class SeekState(State):
             agent.mission_target = agent.get_target()
             agent.set_target(None)
 
-     # distancia percorrida desde a amostragem
+
         dist = self.memory_last_position.distance_to(agent.get_position())
+        
         # verifica se chegou
-        if dist<= RADIUS_TARGET and dist > 3 :
+        d = self.target.distance_to(agent.get_position())
+
+        if d <= RADIUS_TARGET and d > 3 :
             self.finished = True
-        else: # nao chegou
-            self.state_name = f'buscando target: {self.target}'
+            self.state_name = 'Done'
 
      # Verifica se terminou a execucao
         if self.finished == True:
-            #self.state_name = 'Cheguei'
-            state_machine.change_state(SeekState())  
+            pass
 
-        if dist < 60 and self.finished == False :
+        if dist < 30 and self.finished == False  :
             self.time_blocked += SAMPLE_TIME
-            self.state_name = f'TRAVADO: {self.time_blocked:.2f}'
+            self.state_name = f'Blocked: {self.time_blocked:.2f}'
             if self.time_blocked > 2:
+                pos_in_grid = agent.position_in_grid
+                agent.grid_map.change_state_cell(pos_in_grid, OBSTACLE )
+
                 state_machine.change_state(GoToClosestDroneState())  
 
     def execute(self, agent):
@@ -136,15 +143,14 @@ class GoToClosestDroneState(State):
         self.time_executing = 0 #Variavel para contagem do tempo de execução 
         print('GoToClosesDroneState')
         self.finished = False
+        
 
     def check_transition(self, agent, state_machine):
         # Todo: add logic to check and execute state transition
 
         # New target from mouse click
         if agent.get_target():
-            self.target = agent.get_target()
-            agent.set_target(None)
-            self.sequence = 0 # reinicia movimento
+            state_machine.change_state(SeekState())  
 
         if self.time_executing > 3:
             state_machine.change_state(RandomTargetState()) 
@@ -153,7 +159,6 @@ class GoToClosestDroneState(State):
         if self.finished == True:
             state_machine.change_state(SeekState())  
  
-             
     def execute(self, agent):
         # logic to move drone to target
 
@@ -206,7 +211,7 @@ class SearchTargetState(State):
         # Todo: add initialization code
         self.state_name = 'SearchTargetState'
         self.time_executing = 0 #Variavel para contagem do tempo de execução 
-        #print('SearchTargetState')
+        print('SearchTargetState')
         self.finished = False
 
         # Map resolution
@@ -214,8 +219,34 @@ class SearchTargetState(State):
         self.rows = int(SCREEN_HEIGHT/RESOLUTION)  # Rows of the grid
         
         # waypoints to be followed
-        self.waypoints = [ vec2(0,0) , vec2( SCREEN_WIDTH - 100, 0 ) , vec2( 0, RESOLUTION ) ]
+        self.waypoints = []
         self.next_waypoint = 0 
+
+        # for checking if it is blocked
+        self.memory_last_position = vec2(inf,inf)
+        self.sampling_time = 1
+        self.time_blocked = 0
+        self.blocked = False
+
+    def generate_waypoints(self):
+        waypoints = [ vec2(0,0) ] # initial position
+        #size of the grid
+        cols = self.grid_map.get_size()
+
+        global_coord = [ vec2(self.target[0],vec2(self.target[0])) ]
+        # em coordenadas locais do grid
+        # vai até o final
+        waypoints.append( ( cols, 0 ) )
+        # desce
+        waypoints.append( ( 0, 1 ) )
+        # volta
+        waypoints.append( ( - cols , 0 ) )
+
+        # converter para coordenadas globais
+        for w in waypoints:
+            global_coord.append( vec2(self.grid_map.get_cell_center(w)[0],self.grid_map.get_cell_center(w)[1] ) )
+    
+        return global_coord
 
     def check_transition(self, agent, state_machine):
         # Todo: add logic to check and execute state transition
@@ -223,27 +254,45 @@ class SearchTargetState(State):
         # chegou ao waypoint
         if self.finished == True:
             state_machine.change_state(SeekState())  
- 
-             
+        
+        try:
+            self.state_name = f'TARGET: {self.target}'
+        except:
+            pass
+
+     # distancia percorrida desde a amostragem
+        dist = self.memory_last_position.distance_to(agent.get_position())
+        if dist < 70 and self.finished == False :
+            self.time_blocked += SAMPLE_TIME
+            self.state_name = f'Blocked: {self.time_blocked:.2f}'
+            if self.time_blocked > 1:
+                #state_machine.change_state(GoToClosestDroneState())  
+                pass
+
     def execute(self, agent):
         # logic to move drone to target
         try: # verifica se o drone já te um target ou seja, uma coluna a cobrir
             self.target
         except: # nao tem, logo:
-            self.target = agent.mission_target
-            self.grid_map = agent.grid_map
-
-
-        self.target = self.waypoints[self.next_waypoint] + agent.mission_target
-        self.state_name = f'buscando target: {self.target}'
+            self.target = vec2(random.uniform(100,SCREEN_WIDTH),random.uniform(100,SCREEN_HEIGHT))
 
         agent.arrive(self.target)
-        self.time_executing +=SAMPLE_TIME
-        
-        if (self.target - agent.location).length() < RADIUS_OBSTACLES :
-            self.next_waypoint += 1
-            if self.next_waypoint > len(self.waypoints) -1:
-                self.next_waypoint = 0 
 
+        self.time_executing +=SAMPLE_TIME
+            
+        if (self.target - agent.location).length() < RADIUS_OBSTACLES*2 :
+            self.target = vec2(random.uniform(0,SCREEN_WIDTH),random.uniform(0,SCREEN_HEIGHT))
+
+            # target is found by a drone in the swarm
         if agent.found:
             self.finished = True
+            
+            # Sampling location every T seconds
+        if self.time_executing >=  self.sampling_time:
+            self.time_executing = 0 
+            self.memory_last_position = copy.deepcopy(agent.get_position())
+
+ 
+
+
+

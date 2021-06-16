@@ -4,46 +4,74 @@ class ScanInterface:
     def to_string(self) -> str:
         """return the name of Algorithm"""
         pass
+    def prepare_simulation(self, simulation, target):
+        pass
+
+    def update_drone(self, drone, simulation, list_obst, index ):
+        '''
+            This method is used to align drone with swarm
+            update collison avoidance, 
+            updates velocity and position 
+            draw drone on screen
+        '''
+        drone.align_direction_with_swarm(simulation.swarm, index)
+        drone.collision_avoidance(simulation.swarm,list_obst,index) 
+        drone.update()
+        drone.draw(simulation.screenSimulation.screen) 
+    
+    def draw_legend(self,drone, simulation, index):
+        '''
+            This method draws legend under drone
+            which describes its position and behavior
+        '''
+        # index to keep track of  drone in the list
+            # writes drone id
+        img = simulation.screenSimulation.font20.render(f'Drone {index+1}', True, LIGHT_BLUE)
+        simulation.screenSimulation.screen.blit(img, drone.get_position()+(0,20))
+            # writes drone current behavior
+        img = simulation.screenSimulation.font16.render(drone.behavior.get_current_state(), True, LIGHT_BLUE)
+        simulation.screenSimulation.screen.blit(img, drone.get_position()+(0,30))
+            # writes drone current position in grid
+        p = drone.get_position()
+        col = int(p.x/RESOLUTION) 
+        row = int(p.y/RESOLUTION) 
+        #img = simulation.screenSimulation.font16.render(f'Pos:{col},{row}', True, LIGHT_BLUE)
+        #simulation.screenSimulation.screen.blit(img, drone.get_position()+(0,40))
+
+    def update_grid(self, drone, simulation):
+            # Discretized position in grid
+        p = drone.get_position()
+        col = int(p.x/RESOLUTION) 
+        row = int(p.y/RESOLUTION) 
+
+            # changes states of cell to visited 
+        simulation.grid_field.change_state_cell((col,row))
+        drone.set_position_in_grid(col,row)
+        drone.save_grid(simulation.grid_field)
 
     def scan(self, simulation, list_obst):
         """run the scan algorithm"""
         pass
 
 class DefineTargetScan(ScanInterface):
+    '''
+        This strategy is when swarm know the target
+        Not for search, used for reference!
+    '''
     def to_string(self) -> str:
         return 'DefineTargetScan'
 
     def scan(self, simulation, list_obst):
         index = 0 # index is used to track current drone in the simulation list
         for index, _ in enumerate(simulation.swarm):
-            # checks if drones colided with eachother
 
-            ## collision avoindance is not implemented yet
-            _.align_direction_with_swarm(simulation.swarm, index)
-            _.collision_avoidance(simulation.swarm,list_obst,index) 
-            _.update()
-            _.draw(simulation.screenSimulation.screen) 
-            # index to keep track of  drone in the list
-            #index += 1
-            # writes drone id
-            img = simulation.screenSimulation.font20.render(f'Drone {index+1}', True, LIGHT_BLUE)
-            simulation.screenSimulation.screen.blit(img, _.get_position()+(0,20))
-            # writes drone current behavior
-            img = simulation.screenSimulation.font16.render(_.behavior.get_current_state(), True, LIGHT_BLUE)
-            simulation.screenSimulation.screen.blit(img, _.get_position()+(0,30))
+            # align, collison avoidance, updates velocity and position and draw drone
+            self.update_drone( _ ,simulation, list_obst,index)
+            self.draw_legend( _ , simulation, index)
+
+            # Discretized position, updates grid and send to drone
+            self.update_grid( _ , simulation)
             
-            # Discretized position in grid
-            p = _.get_position()
-            col = int(p.x/RESOLUTION) 
-            row = int(p.y/RESOLUTION) 
-            # changes states of cell to visited 
-            simulation.grid_field.change_state_cell((col,row))
-            _.set_position_in_grid(col,row)
-            _.save_grid(simulation.grid_field)
-
-            img = simulation.screenSimulation.font16.render(f'Pos:{col},{row}', True, LIGHT_BLUE)
-            simulation.screenSimulation.screen.blit(img, _.get_position()+(0,40))
-
             if _.reached_goal(simulation.target_simulation):
                 #print(f"Drone {index} atingiu o target")
                 simulation.found = True
@@ -65,44 +93,25 @@ class SnookerScan(ScanInterface):
 class RowScan(ScanInterface):
     def to_string(self) -> str:
         return 'RowScan'
+    
+    def prepare_simulation(self, simulation,target):
+        simulation.set_target_using_search_pattern(target)
 
     def scan(self, simulation, list_obst):
         index = 0 # index is used to track current drone in the simulation list
         for index, _ in enumerate(simulation.swarm):
-            # checks if drones colided with eachother
+            # align, collison avoidance, updates velocity and position and draw drone
+            self.update_drone( _ ,simulation, list_obst,index)
+            self.draw_legend( _ , simulation, index)
 
-            ## collision avoindance is not implemented yet
-            _.align_direction_with_swarm(simulation.swarm, index)
-            _.collision_avoidance(simulation.swarm,list_obst,index) 
-            _.update()
-            _.draw(simulation.screenSimulation.screen) 
-            # index to keep track of  drone in the list
-            #index += 1
-            # writes drone id
-            img = simulation.screenSimulation.font20.render(f'Drone {index+1}', True, LIGHT_BLUE)
-            simulation.screenSimulation.screen.blit(img, _.get_position()+(0,20))
-            # writes drone current behavior
-            img = simulation.screenSimulation.font16.render(_.behavior.get_current_state(), True, LIGHT_BLUE)
-            simulation.screenSimulation.screen.blit(img, _.get_position()+(0,30))
-            
-            # Discretized position in grid
-            p = _.get_position()
-            col = int(p.x/RESOLUTION) 
-            row = int(p.y/RESOLUTION) 
-            # changes states of cell to visited 
-            simulation.grid_field.change_state_cell((col,row))
-            _.set_position_in_grid(col,row)
-
-            img = simulation.screenSimulation.font16.render(f'Pos:{col},{row}', True, LIGHT_BLUE)
-            simulation.screenSimulation.screen.blit(img, _.get_position()+(0,40))
+            # Discretized position, updates grid and send to drone
+            self.update_grid( _ , simulation)
 
             if _.reached_goal(simulation.target_simulation):
-                pass
-                #print(f"Drone {index} atingiu o target")
+                simulation.found = True
 
     def define_search_area(self):
         pass
-
 
 class MeshScan(ScanInterface):
     def to_string(self) -> str:

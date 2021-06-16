@@ -2,7 +2,7 @@ import sys, pygame
 from constants import *
 import random 
 import copy
-from scan import DefineTargetScan
+from scan import DefineTargetScan, RowScan
 from obstacle import Obstacles
 from simulation import Simulation, ScreenSimulation, RateSimulation
 from grid import GridField
@@ -16,7 +16,7 @@ background_image = pygame.transform.scale(background_image,(SCREEN_WIDTH,SCREEN_
 # defines initial target
 target = vec2(random.uniform(0,SCREEN_WIDTH/2), random.uniform(0,SCREEN_HEIGHT/2))
 
-simulation = Simulation(screenSimulation, RateSimulation(1, [5,15], [10,15,20,30], [DefineTargetScan()]))
+simulation = Simulation(screenSimulation, RateSimulation(1, [2,5], [5,15], [DefineTargetScan(),   RowScan() ]    ))
 
 run = True
 while run:
@@ -52,15 +52,21 @@ while run:
 
     for idx, time in enumerate(simulation.rate.out_time):
         try:
-            img = screenSimulation.font20.render(f'{idx+1} - Scan Time: {time:.2f}, {simulation.rate.print_simulation_idx(idx)}', True, LIGHT_BLUE)
+            search = simulation.rate.in_algorithms[simulation.rate.current_repetition].to_string()
+            img = screenSimulation.font20.render(f'{idx+1} - Search: {search} -  Scan Time: {time:.2f}, {simulation.rate.print_simulation_idx(idx)}', True, LIGHT_BLUE)
         except:
-            img = screenSimulation.font16.render(f'{idx+1} - Scan Time: {time}', True, LIGHT_BLUE)
+            search = simulation.rate.in_algorithms[idx].to_string()
+            img = screenSimulation.font16.render(f'{idx+1} -  Search: {search} - Scan Time: {time}', True, LIGHT_BLUE)
         screenSimulation.screen.blit(img, (20, 20*(idx+2)))
         
     # Writes the App name in screen
     img = screenSimulation.font24.render('Swarm Search using Drones', True, LIGHT_BLUE)
     screenSimulation.screen.blit(img, (20, 20))
+    # Writes current Search name in screen
 
+    search = simulation.rate.in_algorithms[simulation.rate.current_repetition].to_string()
+    img = screenSimulation.font24.render(f'Search using: {search} ', True, LIGHT_BLUE)
+    screenSimulation.screen.blit(img, (800, 20))
     # Debug lines - only to assist the developer
     #img = screenSimulation.font24.render('Debug lines: '+ drone.get_debug(), True, BLUE)
     #screenSimulation.screen.blit(img, (20, 40))

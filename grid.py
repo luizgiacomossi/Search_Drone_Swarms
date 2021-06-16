@@ -6,6 +6,10 @@ import copy
 import numpy as np
 vec = pg.math.Vector2 
 
+NOT_VISITED = 0      
+VISITED = 1
+OBSTACLE = 2
+
 class GridField(object):
     def __init__(self, resolution):
 
@@ -39,11 +43,14 @@ class GridField(object):
                 pg.draw.rect(screen, (120,120,120), rect, 1)
                 self.cells[int(y/blockSize)][int(x/blockSize)].draw_center(screen)
 
-    def change_state_cell(self, cell):
+    def change_state_cell(self, cell, to_state = VISITED):
         '''
             Cell is visitated
         '''
-        self.cells[cell[1]][cell[0]].change_state()
+        try:
+            self.cells[cell[1]][cell[0]].change_state(to_state)
+        except:
+            pass
 
     def get_state_cell(self, cell):
         '''
@@ -66,7 +73,6 @@ class GridField(object):
         i = cell[0]
         j = cell[1]
         successors = []
-
         for di in range(-1, 2):
             for dj in range(-1, 2):
 
@@ -84,7 +90,15 @@ class GridField(object):
         input()
 
         return successors
-        
+
+    def get_size(self):
+        '''
+            Returns a tuple containing sizeof the grid :(#col,#row) 
+        '''
+        return (self.cols, self.rows)
+
+    def get_cell_center(self,cell):
+        return self.cells[cell[1]][cell[0]].get_cell_center()   
 
 class Cell():
     '''
@@ -94,18 +108,21 @@ class Cell():
     def __init__(self, pos, blockSize):
         self.size_block = blockSize
         self.position = pos
-        self.state = False
+        self.state = NOT_VISITED
         self.center_in_coord_global = vec(self.position[0]+ self.size_block/2, self.position[1]+ self.size_block/2)
 
     def draw_center(self,screen):
         
-        if self.state == False:
+        if self.state == NOT_VISITED:
             pg.draw.circle(screen, (255,0,0), vec(self.position[0]+ self.size_block/2, self.position[1]+ self.size_block/2), 3)
-        else:
+        if self.state == VISITED: 
             pg.draw.circle(screen, (0,255,0), vec(self.position[0]+ self.size_block/2, self.position[1]+ self.size_block/2), 3)
+        if self.state == OBSTACLE:
+            pg.draw.circle(screen, (0,0,255), vec(self.position[0]+ self.size_block/2, self.position[1]+ self.size_block/2), 3)
 
-    def change_state(self):
-        self.state = True
+    def change_state(self, state = VISITED):
+        if self.state != OBSTACLE:
+            self.state = state
     
     def get_cell_center(self):
         return self.center_in_coord_global
