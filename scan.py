@@ -35,8 +35,8 @@ class ScanInterface:
         p = drone.get_position()
         col = int(p.x/RESOLUTION) 
         row = int(p.y/RESOLUTION) 
-        #img = simulation.screenSimulation.font16.render(f'Pos:{col},{row}', True, LIGHT_BLUE)
-        #simulation.screenSimulation.screen.blit(img, drone.get_position()+(0,40))
+        img = simulation.screenSimulation.font16.render(f'Pos:{col},{row}', True, LIGHT_BLUE)
+        simulation.screenSimulation.screen.blit(img, drone.get_position()+(0,40))
 
     def update_grid(self, drone, simulation):
             # Discretized position in grid
@@ -64,13 +64,14 @@ class DefineTargetScan(ScanInterface):
     def scan(self, simulation, list_obst):
         index = 0 # index is used to track current drone in the simulation list
         for index, _ in enumerate(simulation.swarm):
+            # Discretized position, updates grid and send to drone
+            self.update_grid( _ , simulation)
 
             # align, collison avoidance, updates velocity and position and draw drone
             self.update_drone( _ ,simulation, list_obst,index)
             self.draw_legend( _ , simulation, index)
 
-            # Discretized position, updates grid and send to drone
-            self.update_grid( _ , simulation)
+
             
             if _.reached_goal(simulation.target_simulation):
                 #print(f"Drone {index} atingiu o target")
@@ -100,12 +101,11 @@ class RowScan(ScanInterface):
     def scan(self, simulation, list_obst):
         index = 0 # index is used to track current drone in the simulation list
         for index, _ in enumerate(simulation.swarm):
+            # Discretized position, updates grid and send to drone
+            self.update_grid( _ , simulation)
             # align, collison avoidance, updates velocity and position and draw drone
             self.update_drone( _ ,simulation, list_obst,index)
             self.draw_legend( _ , simulation, index)
-
-            # Discretized position, updates grid and send to drone
-            self.update_grid( _ , simulation)
 
             if _.reached_goal(simulation.target_simulation):
                 simulation.found = True

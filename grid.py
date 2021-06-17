@@ -4,7 +4,13 @@ from math import atan2, pi, exp, floor
 import random
 import copy 
 import numpy as np
+# importing "heapq" to implement heap queue
+import heapq
+
+
 vec = pg.math.Vector2 
+
+
 
 NOT_VISITED = 0      
 VISITED = 1
@@ -20,7 +26,11 @@ class GridField(object):
         print(f' Grid created with  col:{self.cols} row:{self.rows}')
         #self.field = [[vec(random.uniform(0,1),random.uniform(0,1)) for col in range(self.cols)] for row in range(self.rows)] # create matrix 
         self.cells_ = {} # Memory using dictionary NOT USED
+        self.h_cells = []
+        heapq.heapify(self.h_cells)
+
         self.create_grid_cells()
+   
 
     def create_grid_cells(self):
         '''
@@ -32,6 +42,8 @@ class GridField(object):
                 #self.cells_[f'{int(x/blockSize)},{int(y/blockSize)}'] = Cell(vec(x,y), blockSize)
                 #             row                  col       
                 self.cells[int(y/blockSize)][int(x/blockSize)] = Cell(vec(x,y), blockSize)
+                # priority queue HEAP 
+                heapq.heappush( self.h_cells ,  (self.cells[int(y/blockSize)][int(x/blockSize)].state, ( int(y/blockSize),int(x/blockSize) )  ))
 
     def draw(self, screen):
 
@@ -58,7 +70,10 @@ class GridField(object):
             cell: tuple with coordenates
             return: state of the cell 
         '''
-        return self.cells[cell[1]][cell[0]].state
+        try:
+            return self.cells[cell[1]][cell[0]].state
+        except:
+            return VISITED
 
     def get_sucessors(self,cell):
         """
@@ -73,22 +88,19 @@ class GridField(object):
         i = cell[0]
         j = cell[1]
         successors = []
-        for di in range(-1, 2):
-            for dj in range(-1, 2):
-
-                if di != 0 and dj != 0:
-                    
-                    x = i + di
-                    y = j + dj
-
+        for dx in range(-1, 2):
+            for dy in range(-1, 2):
+                if (dx,dy)!= (0,0):
+                    x = i + dx
+                    y = j + dy
                     # if not visited
-                    if x > 0 and y > 0:
-                        if not self.get_state_cell((x, y)):
-                            successors.append((x, y))
+                    if x >= 0 and y >= 0:
+                        if self.get_state_cell((x,y)) == NOT_VISITED:
+                            successors.append(self.get_cell_center((x,y)))  
+                            #successors.append((x, y))
         
-        print(successors)
-        input()
-
+        #print(successors)
+        #input()
         return successors
 
     def get_size(self):
@@ -99,6 +111,12 @@ class GridField(object):
 
     def get_cell_center(self,cell):
         return self.cells[cell[1]][cell[0]].get_cell_center()   
+    
+    def get_cell_not_visited(self):
+        '''
+            This method will return coordenates of a cell that wasnt visited yet
+        '''
+        return  heapq.heappop( self.h_cells )
 
 class Cell():
     '''

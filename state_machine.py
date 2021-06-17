@@ -224,7 +224,109 @@ class SearchTargetState(State):
 
         # for checking if it is blocked
         self.memory_last_position = vec2(inf,inf)
-        self.sampling_time = 1
+        self.sampling_time = 2
+        self.time_blocked = 0
+        self.blocked = False
+
+    def generate_waypoints(self):
+        waypoints = [ vec2(0,0) ] # initial position
+        #size of the grid
+        cols = self.grid_map.get_size()
+
+        global_coord = [ vec2(self.target[0],vec2(self.target[0])) ]
+        # em coordenadas locais do grid
+        # vai até o final
+        waypoints.append( ( cols, 0 ) )
+        # desce
+        waypoints.append( ( 0, 1 ) )
+        # volta
+        waypoints.append( ( - cols , 0 ) )
+
+        # converter para coordenadas globais
+        for w in waypoints:
+            global_coord.append( vec2(self.grid_map.get_cell_center(w)[0],self.grid_map.get_cell_center(w)[1] ) )
+    
+        return global_coord
+
+    def check_transition(self, agent, state_machine):
+        # Todo: add logic to check and execute state transition
+
+        # chegou ao waypoint
+        if self.finished == True:
+            state_machine.change_state(SeekState())  
+        
+        try:
+            #self.state_name = f'TARGET: {self.target}'
+            pass
+        except:
+            pass
+
+     # distancia percorrida desde a amostragem
+        dist = self.memory_last_position.distance_to(agent.get_position())
+        if dist < 30 and self.finished == False :
+            self.time_blocked += SAMPLE_TIME
+            #self.state_name = f'Blocked: {self.time_blocked:.2f}'
+            if self.time_blocked > 2:
+                self.time_blocked = 0
+                #state_machine.change_state(SearchTargetState())  
+                self.target = vec2(random.uniform(0,SCREEN_WIDTH),random.uniform(0,SCREEN_HEIGHT))
+                
+
+    def execute(self, agent):
+        # logic to move drone to target
+        try: # verifica se o drone já te um target ou seja, uma coluna a cobrir
+            self.target
+
+        except: # nao tem, logo:
+            self.target = agent.mission_target
+            self.waypoints = agent.grid_map.get_sucessors( agent.position_in_grid )
+            #print(self.waypoints)
+
+        agent.arrive(self.target)
+
+        self.time_executing +=SAMPLE_TIME
+            
+        if (self.target - agent.location).length() < 30 :
+            #self.target = vec2(random.uniform(0,SCREEN_WIDTH),random.uniform(0,SCREEN_HEIGHT))
+            self.waypoints = agent.grid_map.get_sucessors( agent.position_in_grid )
+            self.state_name = f'{self.waypoints}'
+            if len(self.waypoints) > 0: # enquanto existem celulas nao visitadas na regiao
+                targ = random.choice(self.waypoints)
+                self.target = targ
+            else: # random na tela para buscar ja que todas as celulas foram visitadas
+                self.target = vec2(random.uniform(0,SCREEN_WIDTH),random.uniform(0,SCREEN_HEIGHT))
+
+            #rint(f'EU IRIA PARA A CELULA : {agent.grid_map.get_cell_not_visited()}')
+
+        # target is found by a drone in the swarm
+        if agent.found:
+            self.finished = True
+            
+        # Sampling location every T seconds
+        if self.time_executing >=  self.sampling_time:
+            self.time_executing = 0 
+            self.memory_last_position = copy.deepcopy(agent.get_position())
+
+ 
+class RandomSearchState(State):
+    def __init__(self):
+        # Todo: add initialization code
+        self.state_name = 'SearchTargetState'
+        self.time_executing = 0 #Variavel para contagem do tempo de execução 
+        print('SearchTargetState')
+        self.finished = False
+
+        # Map resolution
+        self.cols =int(SCREEN_WIDTH/RESOLUTION)  # Columns of the grid
+        self.rows = int(SCREEN_HEIGHT/RESOLUTION)  # Rows of the grid
+        
+        # waypoints to be followed
+        self.waypoints = []
+        self.next_waypoint = 0 
+
+        # for checking if it is blocked
+        self.memory_last_position = vec2(inf,inf)
+        self.sampling_time = 2
         self.time_blocked = 0
         self.blocked = False
 
@@ -266,7 +368,8 @@ class SearchTargetState(State):
             self.time_blocked += SAMPLE_TIME
             self.state_name = f'Blocked: {self.time_blocked:.2f}'
             if self.time_blocked > 1:
-                #state_machine.change_state(GoToClosestDroneState())  
+                #state_machine.change_state(SearchTargetState())  
+                #self.target = vec2(random.uniform(0,SCREEN_WIDTH),random.uniform(0,SCREEN_HEIGHT))
                 pass
 
     def execute(self, agent):
@@ -274,7 +377,8 @@ class SearchTargetState(State):
         try: # verifica se o drone já te um target ou seja, uma coluna a cobrir
             self.target
         except: # nao tem, logo:
-            self.target = vec2(random.uniform(100,SCREEN_WIDTH),random.uniform(100,SCREEN_HEIGHT))
+            self.target = agent.mission_target
+            agent.grid_map.get_sucessors( agent.position_in_grid )
 
         agent.arrive(self.target)
 
@@ -282,17 +386,16 @@ class SearchTargetState(State):
             
         if (self.target - agent.location).length() < RADIUS_OBSTACLES*2 :
             self.target = vec2(random.uniform(0,SCREEN_WIDTH),random.uniform(0,SCREEN_HEIGHT))
+            #rint(f'EU IRIA PARA A CELULA : {agent.grid_map.get_cell_not_visited()}')
 
-            # target is found by a drone in the swarm
+        # target is found by a drone in the swarm
         if agent.found:
             self.finished = True
             
-            # Sampling location every T seconds
+        # Sampling location every T seconds
         if self.time_executing >=  self.sampling_time:
             self.time_executing = 0 
             self.memory_last_position = copy.deepcopy(agent.get_position())
 
  
-
-
 
