@@ -10,6 +10,7 @@ from obstacle import Obstacles
 from utils import Npc_target
 from grid import GridField
 import numpy as np
+import matplotlib.pyplot as plt
 
 vec2 = pygame.math.Vector2
 ##=========================
@@ -61,8 +62,33 @@ class RateSimulation(object):
         return f'{idx+1} - Time: {time:.2f}, num_uav: {self.out_num_uav[idx]}, num_swarm: {self.in_num_swarm[idx]}, num_obstacles: {self.in_num_obstacles[idx]}'
 
     def print_rate(self):
+        num_d = []
+        time_sim = []
+        num_obst = []
+        qntd_drones = []
+        idx_sim = []
+
         for idx, time in enumerate(self.out_time):
             print(f'{idx+1} - Time: {time}, num_uav: {self.out_num_uav[idx]}, num_swarm: {self.in_num_swarm[idx]}, num_obstacles: {self.in_num_obstacles[idx]}')
+            num_d.append(self.in_num_swarm[idx])
+            idx_sim.append(idx+1)
+            time_sim.append(time)
+            qntd_drones.append(self.out_num_uav[idx])
+            num_obst.append(self.in_num_obstacles[idx])
+
+        plt.xlabel('Idx')
+        plt.ylabel('Time')
+        plt.title('History of simulations')
+        #plt.plot(idx_sim, time_sim, 'r--', idx_sim,qntd_drones, 'g^' , idx_sim,num_obst,'bs' )
+        plt.plot(idx_sim,qntd_drones, 'g^', idx_sim, num_d  )
+        plt.show()
+        #plt.plot(t, t, 'r--', t, t**2, 'bs', t, t**3, 'g^') 
+
+
+
+
+
+
 
 class ScreenSimulation(object):
     '''

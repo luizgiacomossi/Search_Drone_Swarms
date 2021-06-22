@@ -289,7 +289,7 @@ class SearchTargetState(State):
         if (self.target - agent.location).length() < 30 :
             #self.target = vec2(random.uniform(0,SCREEN_WIDTH),random.uniform(0,SCREEN_HEIGHT))
             self.waypoints = agent.grid_map.get_sucessors( agent.position_in_grid )
-            self.state_name = f'{self.waypoints}'
+            #self.state_name = f'{self.waypoints}'
             if len(self.waypoints) > 0: # enquanto existem celulas nao visitadas na regiao
                 targ = random.choice(self.waypoints)
                 self.target = targ

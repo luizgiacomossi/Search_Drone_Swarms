@@ -6,6 +6,8 @@ from scan import DefineTargetScan, RowScan
 from obstacle import Obstacles
 from simulation import Simulation, ScreenSimulation, RateSimulation
 from grid import GridField
+import matplotlib.pyplot as plt
+
 
 vec2 = pygame.math.Vector2
 ##=========================
@@ -16,7 +18,7 @@ background_image = pygame.transform.scale(background_image,(SCREEN_WIDTH,SCREEN_
 # defines initial target
 target = vec2(random.uniform(0,SCREEN_WIDTH/2), random.uniform(0,SCREEN_HEIGHT/2))
 
-simulation = Simulation(screenSimulation, RateSimulation(1, [5,10], [10,15], [DefineTargetScan(),   RowScan() ]    ))
+simulation = Simulation(screenSimulation, RateSimulation(1, [5,10], [12,15], [DefineTargetScan(),   RowScan() ]    ))
 
 run = True
 while run:
@@ -74,6 +76,9 @@ while run:
     pygame.display.flip()
     
     if not run:
-        pygame.time.wait(5000) 
+        pygame.time.wait(1000) 
 
 simulation.rate.print_rate()
+
+
+
