@@ -9,7 +9,7 @@ SIZE_TRACK = 1
 RESOLUTION = 50 # Of grid
 NUM_OBSTACLES = 30
 RADIUS_OBSTACLES = 40
-TIME_MAX_SIMULATION = 40 # Time to stop simulation in case the conditions are not completed
+TIME_MAX_SIMULATION = 60 # Time to stop simulation in case the conditions are not completed
 AVOID_OBSTACLES = RADIUS_OBSTACLES *1.6
 
 # Sample Time Parameters

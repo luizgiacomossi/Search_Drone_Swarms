@@ -18,7 +18,7 @@ background_image = pygame.transform.scale(background_image,(SCREEN_WIDTH,SCREEN_
 # defines initial target
 target = vec2(random.uniform(0,SCREEN_WIDTH/2), random.uniform(0,SCREEN_HEIGHT/2))
 
-simulation = Simulation(screenSimulation, RateSimulation(1, [5,10], [12,15], [DefineTargetScan(),   RowScan() ]    ))
+simulation = Simulation(screenSimulation, RateSimulation(10, [5,10,15], [10,15,30], [DefineTargetScan(), RowScan()]))
 
 run = True
 while run:
@@ -52,7 +52,7 @@ while run:
     # updates and draws all simulations  
     run = simulation.run_simulation()
 
-    for idx, time in enumerate(simulation.rate.out_time):
+    for idx, time in enumerate(simulation.rate.out_time_mission):
         try:
             search = simulation.rate.in_algorithms[simulation.rate.current_repetition].to_string()
             img = screenSimulation.font20.render(f'{idx+1} - Search: {search} -  Scan Time: {time:.2f}, {simulation.rate.print_simulation_idx(idx)}', True, LIGHT_BLUE)
@@ -78,6 +78,7 @@ while run:
     if not run:
         pygame.time.wait(1000) 
 
+simulation.rate.save_csv()
 simulation.rate.print_rate()
 
 

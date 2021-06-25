@@ -76,6 +76,7 @@ class DefineTargetScan(ScanInterface):
             if _.reached_goal(simulation.target_simulation):
                 #print(f"Drone {index} atingiu o target")
                 simulation.found = True
+                simulation.set_time_target()
 
 class RandoWalkScan(ScanInterface):
     def to_string(self) -> str:
@@ -109,6 +110,7 @@ class RowScan(ScanInterface):
 
             if _.reached_goal(simulation.target_simulation):
                 simulation.found = True
+                simulation.set_time_target()
 
     def define_search_area(self):
         pass

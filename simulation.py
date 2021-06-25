@@ -1,6 +1,7 @@
 import time
 import pygame
 import math
+import csv
 from constants import *
 from vehicle import Vehicle
 from scan import ScanInterface
@@ -30,17 +31,21 @@ class RateSimulation(object):
 
         for r in enumerate(res):
             print(str(r))
-            self.in_num_swarm.append(r[1][0][1])
-            self.in_num_obstacles.append(r[1][1][1])
-            self.in_algorithms.append(r[1][2][1])
+            self.in_num_swarm += [r[1][0][1]] * in_repetitions 
+            self.in_num_obstacles += [r[1][1][1]] * in_repetitions 
+            self.in_algorithms += [r[1][2][1]] * in_repetitions 
         
         # Outputs of Rate
-        self.out_time = []
+        self.out_time_mission = []
+        self.out_time_target = []
         self.out_num_uav = []
         self.print_plan_rate()
 
-    def set_out(self, out_time, out_num_uav):
-        self.out_time.append(out_time)
+    def set_time_target(self, time_target):
+        self.out_time_target.append(time_target)
+
+    def set_out(self, out_time_mission, out_num_uav):
+        self.out_time_mission.append(out_time_mission)
         self.out_num_uav.append(out_num_uav)
 
     def next_simulation(self):
@@ -64,15 +69,17 @@ class RateSimulation(object):
     def print_rate(self):
         num_d = []
         time_sim = []
+        time_target = []
         num_obst = []
         qntd_drones = []
         idx_sim = []
 
-        for idx, time in enumerate(self.out_time):
-            print(f'{idx+1} - Time: {time}, num_uav: {self.out_num_uav[idx]}, num_swarm: {self.in_num_swarm[idx]}, num_obstacles: {self.in_num_obstacles[idx]}')
+        for idx in range(0, len(self.out_time_target)):
+            print(f'{idx+1} - Time Target: {self.out_time_target[idx]}, Time Mission: {self.out_time_mission[idx]}, num_uav: {self.out_num_uav[idx]}, num_swarm: {self.in_num_swarm[idx]}, num_obstacles: {self.in_num_obstacles[idx]}')
             num_d.append(self.in_num_swarm[idx])
             idx_sim.append(idx+1)
-            time_sim.append(time)
+            time_target.append(self.out_time_target[idx])
+            time_sim.append(self.out_time_mission[idx])
             qntd_drones.append(self.out_num_uav[idx])
             num_obst.append(self.in_num_obstacles[idx])
 
@@ -84,11 +91,15 @@ class RateSimulation(object):
         plt.show()
         #plt.plot(t, t, 'r--', t, t**2, 'bs', t, t**3, 'g^') 
 
-
-
-
-
-
+    def save_csv(self):
+        with open('result.csv', 'w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(["Execution", "N Drones", "N Obstacles", "Algorithm", "Time Found Target", "Time Mission Completed"])
+            print(len(self.out_time_mission))
+            for idx in range(0, self.in_repetitions):
+                #writer.writerow([idx+1, self.in_num_swarm[idx], self.in_num_obstacles[idx], self.in_algorithms[idx], self.out_time_target[idx], self.out_time_mission[idx]])
+                writer.writerow([idx+1, self.in_num_swarm[idx], self.in_num_obstacles[idx], self.in_algorithms[idx].to_string(), self.out_time_target[idx], self.out_time_mission[idx]])
+            
 
 class ScreenSimulation(object):
     '''
@@ -174,6 +185,9 @@ class Simulation(object):
             _.set_target(target)
             if found == True:
                 _.found = True
+
+    def set_time_target(self):
+        self.rate.set_time_target(time.time() - self.start_watch)
 
     def set_target_using_search_pattern(self, target_simulation):
         '''
