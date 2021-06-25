@@ -205,7 +205,7 @@ class RandomTargetState(State):
 
 class SearchTargetState(State):
     """
-        Drone will seek a random target to unblock as last resort
+        Drone will seek a 8-connected cells - random target  as last resort
     """
     def __init__(self):
         # Todo: add initialization code
@@ -271,7 +271,6 @@ class SearchTargetState(State):
                 #state_machine.change_state(SearchTargetState())  
                 self.target = vec2(random.uniform(0,SCREEN_WIDTH),random.uniform(0,SCREEN_HEIGHT))
                 
-
     def execute(self, agent):
         # logic to move drone to target
         try: # verifica se o drone já te um target ou seja, uma coluna a cobrir
@@ -306,7 +305,6 @@ class SearchTargetState(State):
         if self.time_executing >=  self.sampling_time:
             self.time_executing = 0 
             self.memory_last_position = copy.deepcopy(agent.get_position())
-
  
 class RandomSearchState(State):
     def __init__(self):
