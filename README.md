@@ -18,15 +18,15 @@ Dependencies:
 
 -> To execute the simulator -:: Run the file: main.py ::-
 
-Description of Files
- 
-Main.py - main file
-utils.py - Useful functions used
-constants.py - parameters for the simulation
-state_machine.py - Implementation of the decision making (State Machine and Behaviors)
-vehicle.py - Implementation of the vehicle (drone) logic and its basic movements
-obstacle.py - Obstacle generation logic
-scan.py - Search strategies logic
-grid.py - Discrete map logic
+Description of Files:
+
+ Main.py - main file
+ utils.py - Useful functions used
+ constants.py - parameters for the simulation
+ state_machine.py - Implementation of the decision making (State Machine and Behaviors)
+ vehicle.py - Implementation of the vehicle (drone) logic and its basic movements
+ obstacle.py - Obstacle generation logic
+ scan.py - Search strategies logic
+ grid.py - Discrete map logic
 
 The model folder contains sprites used for drone animation
