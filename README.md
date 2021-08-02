@@ -11,9 +11,9 @@ To run the program it is necessary:
 Dependencies:
 
 - PYGAME -> https://www.pygame.org/wiki/GettingStarted
-- pip install pygame
+     - pip install pygame
 - NUMPY -> https://numpy.org/
-- pip install numpy
+     - pip install numpy
 
 
 -> To execute the simulator -:: Run the file: main.py ::-
