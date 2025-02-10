@@ -151,7 +151,7 @@ class Aircraft(pg.sprite.Sprite):
         self.sprites = []
 
         for i in range(0,4):
-            self.sprites.append(pg.image.load(f'models/Drone_hd/sprite_{i}.png').convert())
+            self.sprites.append(pg.image.load(f'models/Drone5/sprite_{i}.png').convert())
             
 
         self.atual = 0
@@ -186,7 +186,8 @@ class Aircraft(pg.sprite.Sprite):
     def update(self, position, angle, size = SIZE_DRONE* PIX2M):
         
         # animation update speed is controle by this parameter
-        self.atual += .1
+        self.atual += 1
+        
         if self.atual >= len(self.sprites):
             self.atual = 0
 
@@ -215,7 +216,7 @@ class FlowField():
         for x in range(0, SCREEN_WIDTH, blockSize):
             for y in range(0, SCREEN_HEIGHT, blockSize):
                 rect = pg.Rect(x, y, blockSize, blockSize)
-                pg.draw.rect(screen, (200,200,200), rect, 1)
+                pg.draw.rect(screen, (100,100,100), rect, 1)
 
 class Npc_target(pg.sprite.Sprite):
     """
@@ -269,7 +270,7 @@ class Tree(pg.sprite.Sprite):
         pg.sprite.Sprite.__init__(self)
         self.sprites = []
 
-        for i in range(1,4):
+        for i in range(1,2):
             self.sprites.append(pg.image.load(f'models/tree3/tree_{i}.png').convert())
             self.sprites[i-1] =  pg.transform.rotozoom(self.sprites[i-1], 0, .3)
 

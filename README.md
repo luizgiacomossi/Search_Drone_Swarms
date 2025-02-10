@@ -1,29 +1,32 @@
-# Busca com Swarm de drones
+# Drone Swarm in Search Target Scenario
 
-Este projeto é referente ao projeto final da disciplina de Simulação de drones SC-249/2021 do ITA - Instituto Tecnológico de Aeronáutica
 
-Para execução do programa é necessário:
+This simulator aims to facilitate future simulations using drones swarms for search applications, or any different scenarios, through an easy to use and modify, open-source implementation. 
+
+To run the program it is necessary:
 
 - PYTHON
-- VSCode ou algum outro editor de código
+- VSCode or some other code editor
 
-Dependencias: 
+Dependencies:
 
 - PYGAME -> https://www.pygame.org/wiki/GettingStarted
-	- pip install pygame
+     - pip install pygame
 - NUMPY -> https://numpy.org/
-	- pip install numpy
+     - pip install numpy
 
 
-Executar o arquivo: main.py
+-> To execute the simulator -:: Run the file: main.py ::-
 
-Descrição dos Arquivos
- 
-	Main.py 	 - arquivo principal
-	utils.py 	 - Funções uteis utilizadas
-	constants.py 	 - paramentros para a simulação
-	state_machine.py - Implementação da Maquina de estados e dos behaviors 
-	vehicle.py	 - Implementação da lógica do veiculo (drone) e seus movimentos básicos
-	obstacle.py  	 - Lógica da geraçao de obstaculos
+Files Description:
 
-A pasta model contem sprites utilizadas para animação do drone
+     Main.py - main file
+     utils.py - Useful functions used
+     constants.py - parameters for the simulation
+     state_machine.py - Implementation of the decision making (State Machine and Behaviors)
+     vehicle.py - Implementation of the vehicle (drone) logic and its basic movements
+     obstacle.py - Obstacle generation logic
+     scan.py - Search strategies logic
+     grid.py - Discrete map logic
+
+The model folder contains sprites used for drone animation
