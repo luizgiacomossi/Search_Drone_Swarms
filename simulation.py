@@ -14,6 +14,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 vec2 = pygame.math.Vector2
+
 ##=========================
 class RateSimulation(object):
     def __init__(self, in_repetitions, in_num_swarm, in_num_obstacles, in_algorithms):
