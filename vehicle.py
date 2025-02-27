@@ -5,6 +5,8 @@ from math import cos, sin, atan2, pi, inf
 import random
 import copy 
 import numpy as np
+from typing import List, Optional, Tuple, Union
+
 
 vec2 = pg.math.Vector2
 
@@ -63,39 +65,49 @@ class Vehicle(object):
     def reached_goal(self, target):
         return target and (target - self.location).length() <= RADIUS_TARGET 
     
+    def applyForce(self, force):
+        self.acceleration += force/MASS # Newton's second law
+        #f = limit(force , self.max_force)
+        #self.acceleration += force/MASS
+
     def update(self):
-        """
-            Standart Euler integration
-            Updates bahavior tree
-        """
+        # adds drag force
+        self.apply_drag()
         # updates behavior in machine state
         self.behavior.update(self)
         # Updates velocity at every step and limits it to max_speed
-        self.velocity += self.acceleration * 1 
-        self.velocity = limit(self.velocity, self.max_speed) 
+        self.velocity += self.acceleration * 1
+        self.velocity = limit(self.velocity, self.max_speed)
         # updates position
-        self.location += self.velocity 
+        self.location += self.velocity
         # Prevents it from crazy spinning due to very low noise speeds
         if self.velocity.length() > 0.8:
             self.rotation = atan2(self.velocity.y,self.velocity.x)
-        # Constrains position to limits of screen 
+        # Constrains position to limits of screen
         self.location = constrain(self.location,SCREEN_WIDTH,SCREEN_HEIGHT)
         self.acceleration *= 0
 
         # Memory of positions to draw Track
         self.memory_location.append((self.location.x,self.location.y))
-        # size of track 
+        # size of track
         if len(self.memory_location) > SIZE_TRACK:
             self.memory_location.pop(0)
 
-    def applyForce(self, force):
+    def apply_drag(self):
         """
-            Applies vetor force to vehicle 
-            Newton's second law -> F=m.a
-            You can divide by mass
+        Applies aerodynamic drag force to the drone.
         """
-        #f = limit(force , self.max_force)
-        self.acceleration += force/MASS 
+        drag_coefficient = 0.5  # Adjust this value
+        area = 0.1  # Approximate frontal area (adjust this)
+        air_density = 1.225  # kg/m^3 (sea level)
+
+        speed_squared = self.velocity.length_squared() # Avoid square root
+
+        drag_magnitude = 0.5 * air_density * area * drag_coefficient * speed_squared
+        drag_direction = -self.velocity.normalize()
+
+        drag_force = drag_direction * drag_magnitude
+        self.applyForce(drag_force)
 
     def seek(self, target):
         """
@@ -344,88 +356,74 @@ class Vehicle(object):
     def draw(self, window):
 
         """
-            Defines shape of vehicle and draw it to screen
+        Render drone with optional debug visualization.
+        
+        Args:
+            window: Pygame window surface
         """
-        if self.closest_drone :
-            pg.draw.line(self.window, self.color_target, self.location, self.closest_drone , 1)
+        # Draw connection to closest drone
+        if self.closest_drone:
+            pg.draw.line(self.window, self.color_target, self.location, self.closest_drone, 1)
 
-        # draws track
+        # Render drone track
         if len(self.memory_location) >= 2:
             pg.draw.lines(self.window, self.color_target, False, self.memory_location, 1)
-        # Drawing drone's outer circle as a hitbox?
-        if self.debug == True:
+
+        # Debug visualization
+        if self.debug:
             pg.draw.circle(self.window, (100, 100, 100), self.location, AVOID_DISTANCE, 1)
-            #pg.draw.line(self.window, (100, 100, 100), self.location, self.location+self.desired , 1)
-            # Draw Direction
             v = self.velocity.length()
-            pg.draw.line(self.window, self.color_target, self.location, self.location + self.velocity.normalize()*v*20 , 1)
+            pg.draw.line(self.window, self.color_target, self.location, 
+                         self.location + self.velocity.normalize() * v * 20, 1)
 
-        # usar sprite para desenhar drone
+        # Render sprite
         self.all_sprites.draw(self.window)
-        self.all_sprites.update(self.location,self.rotation)
+        self.all_sprites.update(self.location, self.rotation)
 
-    def collision_avoidance(self, positions_drones , pos_obstacles , index):
+
+    def collision_avoidance(self, positions_drones: List['Vehicle'], pos_obstacles: List[vec2], index: int) -> None:
         """
-          Avoid obstacles and collision with other drones
+        Advanced collision avoidance with drones and obstacles.
+        
+        Args:
+            positions_drones (List[Vehicle]): All drones in the swarm
+            pos_obstacles (List[vec2]): Obstacle positions
+            index (int): Current drone's index
         """
-        # check drones
-        aux = 0 
+        # Drone collision avoidance
         closest = +inf
-        for p in positions_drones:
+        factor_distance = 2
+
+        for aux, p in enumerate(positions_drones):
             d = (self.location - p.location).magnitude()
-            #d = self.location.distance_to(p.location)
-            # check closest drone in the swarm
-            if d < closest and d>0:
+            
+            # Find closest drone
+            if 0 < d < closest:
                 closest = d
                 self.closest_drone = copy.deepcopy(p.location)
-                
-            factor_distance = 2
-            dist_avoid = AVOID_DISTANCE*factor_distance
-            if ( d < dist_avoid )  and (aux != index):
-                f_repulsion = derivativeBivariate(0.001,.001, p.location , self.location )/SAMPLE_TIME
-                #print(f_repulsion)
-                f_repulsion = limit(f_repulsion,self.max_force*1.8)
-
+            
+            # Collision prevention
+            if aux != index and d < AVOID_DISTANCE * factor_distance:
+                f_repulsion = derivativeBivariate(0.001, 0.001, p.location, self.location) / SAMPLE_TIME
+                f_repulsion = limit(f_repulsion, self.max_force * 1.8)
                 self.applyForce(-f_repulsion)
-                #print(f'Alerta de colisão drone {index} com drone {aux}')
                 break
-            aux +=1
 
-        # --- Repulsion obstacles 
-
-        # Calculating distance to obstcles using vectorization
-        # obstaculos = np.array(pos_obstacles)
-        # diff = self.location - obstaculos 
-        # distancias = np.linalg.norm( diff , axis = 1)
-        # factor_repulsion = 0.5
-        # dist_avoid = AVOID_OBSTACLES + AVOID_DISTANCE
-        # check_distance = [d for d in distancias if d < dist_avoid ]
-        # check_distance =  np.array(check_distance)
-        # if len(check_distance) > 0 :
-        #     k = 100
-        #     force = np.exp( -factor_repulsion*(diff[:][0])/k**2 - factor_repulsion*(diff[:][1])/k**2 )/SAMPLE_TIME
-        #     force = vec2(force[0],force[1])
-        #     f = limit(force , self.max_force)
-        #     self.applyForce(-force)
-
+        # Obstacle collision avoidance
         factor_repulsion = 0.005
         dist_avoid = AVOID_OBSTACLES + AVOID_DISTANCE
-        for p in pos_obstacles:
-            #distance to obstacle
-            d = (self.location - p).length()
-            # threshold to force action
-            if ( d < dist_avoid ) :
-                f_repulsion = derivativeBivariate(factor_repulsion,factor_repulsion, p, self.location )/SAMPLE_TIME
-                f_repulsion = limit(f_repulsion,self.max_force*1.8)
+
+        for obstacle in pos_obstacles:
+            d = (self.location - obstacle).length()
+            
+            if d < dist_avoid:
+                f_repulsion = derivativeBivariate(factor_repulsion, factor_repulsion, obstacle, self.location) / SAMPLE_TIME
+                f_repulsion = limit(f_repulsion, self.max_force * 1.8)
                 self.applyForce(-f_repulsion)
-             #----
-                # This condition checks if drone collided with wall
-                # if collided, this avoids that the drone goes over the obstacle
-                if (d < RADIUS_OBSTACLES + SIZE_DRONE):
-                    direction = self.velocity.normalize()
+                
+                # Emergency collision handling
+                if d < RADIUS_OBSTACLES + SIZE_DRONE:
                     self.velocity *= -0.5
-                    #force_max = direction*self.max_force/0.5
-                    #self.applyForce(-force_max)
 
     def get_closest_drone(self):
         return self.closest_drone

@@ -10,8 +10,6 @@ import heapq
 
 vec = pg.math.Vector2 
 
-
-
 NOT_VISITED = 0      
 VISITED = 1
 OBSTACLE = 2
@@ -25,25 +23,23 @@ class GridField(object):
         self.resolution = resolution # Resolution of grid relative to window width and height in pixels
         print(f' Grid created with  col:{self.cols} row:{self.rows}')
         #self.field = [[vec(random.uniform(0,1),random.uniform(0,1)) for col in range(self.cols)] for row in range(self.rows)] # create matrix 
-        self.cells_ = {} # Memory using dictionary NOT USED
         self.h_cells = []
         heapq.heapify(self.h_cells)
 
         self.create_grid_cells()
    
-
     def create_grid_cells(self):
         '''
             Creates grid with cells according to resolution 
         '''
-        blockSize =  self.resolution
-        for x in range(0, SCREEN_WIDTH,  blockSize):
-            for y in range(0, SCREEN_HEIGHT,  blockSize):
-                #self.cells_[f'{int(x/blockSize)},{int(y/blockSize)}'] = Cell(vec(x,y), blockSize)
-                #             row                  col       
-                self.cells[int(y/blockSize)][int(x/blockSize)] = Cell(vec(x,y), blockSize)
-                # priority queue HEAP 
-                heapq.heappush( self.h_cells ,  (self.cells[int(y/blockSize)][int(x/blockSize)].state, ( int(y/blockSize),int(x/blockSize) )  ))
+        blockSize = self.resolution
+        for x in range(0, SCREEN_WIDTH, blockSize):
+            for y in range(0, SCREEN_HEIGHT, blockSize):
+                row = int(y / blockSize)
+                col = int(x / blockSize)
+                self.cells[row][col] = Cell(vec(x, y), blockSize)
+                # Priority queue HEAP
+                heapq.heappush(self.h_cells, (self.cells[row][col].state, (row, col)))
 
     def draw(self, screen):
 
@@ -85,22 +81,18 @@ class GridField(object):
             :return: list of the 8-connected successors.
             :rtype: list of cells.
         """
-        i = cell[0]
-        j = cell[1]
+        i, j = cell
         successors = []
+        
         for dx in range(-1, 2):
             for dy in range(-1, 2):
-                if (dx,dy)!= (0,0):
-                    x = i + dx
-                    y = j + dy
-                    # if not visited
-                    if x >= 0 and y >= 0:
-                        if self.get_state_cell((x,y)) == NOT_VISITED:
-                            successors.append(self.get_cell_center((x,y)))  
-                            #successors.append((x, y))
+                if dx == 0 and dy == 0:
+                    continue  # Skip the current cell
+
+                x, y = i + dx, j + dy
+                if 0 <= x < self.cols and 0 <= y < self.rows and self.get_state_cell((x, y)) == NOT_VISITED:
+                    successors.append(self.get_cell_center((x, y)))
         
-        #print(successors)
-        #input()
         return successors
 
     def get_size(self):
@@ -114,9 +106,14 @@ class GridField(object):
     
     def get_cell_not_visited(self):
         '''
-            This method will return coordenates of a cell that wasnt visited yet
+            This method will return coordinates of a cell that wasn't visited yet
         '''
-        return  heapq.heappop( self.h_cells )
+        while self.h_cells:
+            state, (row, col) = heapq.heappop(self.h_cells)
+            if state == NOT_VISITED:
+                return (row, col)
+        return None  # If no unvisited cell is found
+
 
 class Cell():
     '''

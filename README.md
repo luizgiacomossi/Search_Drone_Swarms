@@ -46,8 +46,8 @@ Or install individual components:
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/drone-swarm-simulator.git
-   cd drone-swarm-simulator
+   git clone https://github.com/luizgiacomossi/Search_Drone_Swarms.git
+   cd Search_Drone_Swarms
    ```
 
 2. Run the simulator:
@@ -58,7 +58,7 @@ Or install individual components:
 ## 🏗️ Project Structure
 
 ```
-drone-swarm-simulator/
+Search_Drone_Swarms/
 │
 ├── 📄 main.py            # Entry point and main simulation loop
 ├── 📄 constants.py       # Simulation parameters and configuration

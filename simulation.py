@@ -101,7 +101,6 @@ class RateSimulation(object):
                 #writer.writerow([idx+1, self.in_num_swarm[idx], self.in_num_obstacles[idx], self.in_algorithms[idx], self.out_time_target[idx], self.out_time_mission[idx]])
                 writer.writerow([idx+1, self.in_num_swarm[idx], self.in_num_obstacles[idx], self.in_algorithms[idx].to_string(), self.out_time_target[idx], self.out_time_mission[idx]])
             
-
 class ScreenSimulation(object):
     '''
         Class responsable to represent the canvas variables

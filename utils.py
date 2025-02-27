@@ -19,10 +19,9 @@ def bivariateFunction(alpha,beta,center,position):
         control variables: Alpha and Beta will control the stringthof the vectors in x and y directions
         return: point in the bivariate function
     '''
-    #k = 100000000 # parameter
     k = 10
     f = exp( -alpha*(position.x - center.x)/k**2 - beta*(position.y - center.y)/k**2 )
-    #print(f)
+
     return f
  
 def derivativeBivariate(alpha,beta,center,position):
@@ -220,7 +219,7 @@ class FlowField():
 
 class Npc_target(pg.sprite.Sprite):
     """
-        Represents a simple visual animated tree 
+        Represents a missing person
         Can load sprites, rotate and update animation
     """
     def __init__(self):
@@ -258,8 +257,8 @@ class Npc_target(pg.sprite.Sprite):
         # rotozoom(Surface, angle, scale) -> Surface
         #self.image = pg.transform.rotozoom(self.image, 0, .2)
         self.rect = self.image.get_rect()
-        # positions center of rect in acual drone position
-        self.rect.midbottom = position.x,position.y+20
+        # positions the npc in center of rectangle
+        self.rect.midbottom = position.x ,position.y + 20 
 
 class Tree(pg.sprite.Sprite):
     """
