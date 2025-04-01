@@ -42,6 +42,12 @@ Or install individual components:
   pip install numpy
   ```
 
+- **matplotlib** - For plots and visualizations
+  ```bash
+  pip install matplotlib
+  ```
+
+
 ## 🚀 Getting Started
 
 1. Clone the repository:
