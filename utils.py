@@ -150,7 +150,7 @@ class Aircraft(pg.sprite.Sprite):
         self.sprites = []
 
         for i in range(0,4):
-            self.sprites.append(pg.image.load(f'models/Drone5/sprite_{i}.png').convert())
+            self.sprites.append(pg.image.load(f'models/Drone5/sprite_{i}.png').convert_alpha())
             
 
         self.atual = 0
@@ -227,7 +227,7 @@ class Npc_target(pg.sprite.Sprite):
         self.sprites = []
 
         #for i in range(1,4):
-        self.sprites.append(pg.image.load(f'models/texture/wandering_trader1.png').convert())
+        self.sprites.append(pg.image.load(f'models/texture/wandering_trader1.png').convert_alpha())
         self.sprites[-1] =  pg.transform.rotozoom(self.sprites[-1], 0, 1)
 
         self.atual = 0
@@ -270,7 +270,7 @@ class Tree(pg.sprite.Sprite):
         self.sprites = []
 
         for i in range(1,2):
-            self.sprites.append(pg.image.load(f'models/tree3/tree_{i}.png').convert())
+            self.sprites.append(pg.image.load(f'models/tree3/tree_{i}.png').convert_alpha())
             self.sprites[i-1] =  pg.transform.rotozoom(self.sprites[i-1], 0, .3)
 
         self.atual = 0
