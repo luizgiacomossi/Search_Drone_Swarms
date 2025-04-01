@@ -88,9 +88,9 @@ Search_Drone_Swarms/
 The simulator includes several pre-implemented search strategies:
 
 - **Grid Search** - Systematic coverage of the entire area
-- **Spiral Search** - Outward spiraling pattern from central point
-- **Random Walk** - Stochastic movement with collision avoidance
-- **Levy Flight** - Bio-inspired search pattern with occasional long jumps
+- **Spiral Search** - Outward spiraling pattern from central point -> Not implemented yet
+- **Random Walk** - Stochastic movement with collision avoidance -> Not implemented yet
+- **Levy Flight** - Bio-inspired search pattern with occasional long jumps -> Not implemented yet
 
 ## 🔧 Configuration
 
