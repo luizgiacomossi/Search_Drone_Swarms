@@ -19,10 +19,10 @@ class SwarmManager:
         self.behaviors = []
         for d in range(0, num_swarm):
             # Seek state: se tem o target inicialmente:
-            if search_pattern == 'DefineTargetScan':
-                self.behaviors.append( FiniteStateMachine( SeekState() ) ) # Inicial state
-            else:
+            if search_pattern == 'RowScan':
                 self.behaviors.append( FiniteStateMachine( SearchTargetState() ) ) # Inicial state
+            else:
+                self.behaviors.append( FiniteStateMachine( SeekState() ) ) # Inicial state
 
             drone = Vehicle(uniform(0,100), uniform(0,100), self.behaviors[-1], self.display_manager.world_surface)
             self.swarm.append(drone)

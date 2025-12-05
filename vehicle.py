@@ -403,6 +403,7 @@ class Vehicle(object):
         """
         # Drone collision avoidance
         closest = +inf
+        self.closest_drone = None
         factor_distance = 2
         search_radius = AVOID_DISTANCE * factor_distance
         

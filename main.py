@@ -4,8 +4,7 @@ import pygame
 import matplotlib.pyplot as plt
 from pygame.math import Vector2
 from constants import *
-from scan import DefineTargetScan, RowScan
-from obstacle import Obstacles
+from scan import DefineTargetScan, RowScan, MeshScan, SnookerScan
 from obstacle import Obstacles
 from simulation import Simulation
 from display_manager import DisplayManager
@@ -38,7 +37,7 @@ class DroneSimulation:
             10, 
             [10], 
             [20], 
-            [DefineTargetScan(), RowScan()]
+            [DefineTargetScan(), RowScan(), MeshScan(), SnookerScan()]
         )
         
         self.simulation = Simulation(
@@ -165,7 +164,6 @@ class DroneSimulation:
             while running:
                 # Handle frame timing
                 self.display_manager.clock.tick(FREQUENCY)
-                
                 # Process events
                 running = self.handle_events()
                 
@@ -177,7 +175,8 @@ class DroneSimulation:
                 sim_running = self.simulation.run_simulation()
                 if not sim_running:
                     running = False
-                    
+                
+    
                 # Scale and blit world surface to screen
                 scaled_surface = pygame.transform.scale(
                     self.display_manager.world_surface, 
