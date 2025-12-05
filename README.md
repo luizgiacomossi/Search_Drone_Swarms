@@ -66,6 +66,7 @@ Or install individual components:
 
 ## 🏗️ Project Structure
 
+```
 Search_Drone_Swarms/
 │
 ├── 📄 main.py               # Entry point and main simulation loop
