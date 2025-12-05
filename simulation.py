@@ -1,7 +1,9 @@
 import time
 import pygame
 import math
-import csv
+import numpy as np
+import matplotlib.pyplot as plt
+
 from constants import *
 from vehicle import Vehicle
 from scan import ScanInterface
@@ -10,179 +12,38 @@ from random import uniform
 from obstacle import Obstacles
 from utils import Npc_target
 from grid import GridField
-import numpy as np
-import matplotlib.pyplot as plt
+
+# New Managers
+from experiment_manager import ExperimentManager
+from display_manager import DisplayManager
+from swarm_manager import SwarmManager
 
 vec2 = pygame.math.Vector2
 
-##=========================
-class RateSimulation(object):
-    def __init__(self, in_repetitions, in_num_swarm, in_num_obstacles, in_algorithms):
-        self.current_repetition = 0
-        self.in_num_swarm = []
-        self.in_num_obstacles = []
-        self.in_algorithms = []
-        
-        # Inputs of Rate
-        self.in_repetitions = in_repetitions * len(in_num_swarm) * len(in_num_obstacles) * len(in_algorithms)
-        
-        res = [[i, j, k] for i in enumerate(in_num_swarm) 
-                         for j in enumerate(in_num_obstacles) 
-                         for k in enumerate(in_algorithms) ]
-
-        for r in enumerate(res):
-            print(str(r))
-            self.in_num_swarm += [r[1][0][1]] * in_repetitions 
-            self.in_num_obstacles += [r[1][1][1]] * in_repetitions 
-            self.in_algorithms += [r[1][2][1]] * in_repetitions 
-        
-        # Outputs of Rate
-        self.out_time_mission = []
-        self.out_time_target = []
-        self.out_num_uav = []
-        self.print_plan_rate()
-
-    def set_time_target(self, time_target):
-        self.out_time_target.append(time_target)
-
-    def set_out(self, out_time_mission, out_num_uav):
-        self.out_time_mission.append(out_time_mission)
-        self.out_num_uav.append(out_num_uav)
-
-    def next_simulation(self):
-        if self.in_repetitions - 1 == self.current_repetition:
-            return False
-        else:
-            self.current_repetition = self.current_repetition + 1
-            self.print_simulation()
-            return True
-
-    def print_plan_rate(self):
-        for idx in range(0, self.in_repetitions):
-            print(f'{idx+1} - num_obstacles: {self.in_num_obstacles[idx]}, num_swarm : {self.in_num_swarm[idx]}, algorithm : {self.in_algorithms[idx].to_string()},')
-
-    def print_simulation(self):
-        return f'{self.current_repetition+1} - num_swarm: {self.in_num_swarm[self.current_repetition]}, num_obstacles: {self.in_num_obstacles[self.current_repetition]}, Algorithm: {self.in_algorithms[self.current_repetition].to_string()}'
-
-    def print_simulation_idx(self, idx):
-        return f'{idx+1} - Time: {time:.2f}, num_uav: {self.out_num_uav[idx]}, num_swarm: {self.in_num_swarm[idx]}, num_obstacles: {self.in_num_obstacles[idx]}'
-
-    def print_rate(self):
-        num_d = []
-        time_sim = []
-        time_target = []
-        num_obst = []
-        qntd_drones = []
-        idx_sim = []
-
-        for idx in range(0, len(self.out_time_target)):
-            print(f'{idx+1} - Time Target: {self.out_time_target[idx]}, Time Mission: {self.out_time_mission[idx]}, num_uav: {self.out_num_uav[idx]}, num_swarm: {self.in_num_swarm[idx]}, num_obstacles: {self.in_num_obstacles[idx]}')
-            num_d.append(self.in_num_swarm[idx])
-            idx_sim.append(idx+1)
-            time_target.append(self.out_time_target[idx])
-            time_sim.append(self.out_time_mission[idx])
-            qntd_drones.append(self.out_num_uav[idx])
-            num_obst.append(self.in_num_obstacles[idx])
-
-        plt.xlabel('Idx')
-        plt.ylabel('Time')
-        plt.title('History of simulations')
-        #plt.plot(idx_sim, time_sim, 'r--', idx_sim,qntd_drones, 'g^' , idx_sim,num_obst,'bs' )
-        plt.plot(idx_sim,qntd_drones, 'g^', idx_sim, num_d  )
-        plt.show()
-        #plt.plot(t, t, 'r--', t, t**2, 'bs', t, t**3, 'g^') 
-
-    def save_csv(self):
-        if not SAVE_RESULTS:
-            return
-            
-        with open('result.csv', 'w', newline='') as file:
-            writer = csv.writer(file)
-            writer.writerow(["Execution", "N Drones", "N Obstacles", "Algorithm", "Time Found Target", "Time Mission Completed"])
-            print(len(self.out_time_mission))
-            for idx in range(0, self.in_repetitions):
-                #writer.writerow([idx+1, self.in_num_swarm[idx], self.in_num_obstacles[idx], self.in_algorithms[idx], self.out_time_target[idx], self.out_time_mission[idx]])
-                writer.writerow([idx+1, self.in_num_swarm[idx], self.in_num_obstacles[idx], self.in_algorithms[idx].to_string(), self.out_time_target[idx], self.out_time_mission[idx]])
-            
-class ScreenSimulation(object):
-    '''
-        Class responsable to represent the canvas variables
-    ''' 
-    def __init__(self):
-        pygame.init()
-        self.font16 = pygame.font.SysFont(None, 16)
-        self.font20 = pygame.font.SysFont(None, 20)
-        self.font24 = pygame.font.SysFont(None, 24)
-        self.size = SCREEN_WIDTH, SCREEN_HEIGHT 
-        self.clock = pygame.time.Clock()
-        self.screen = pygame.display.set_mode(self.size)
-        
-        # Zoom and Pan variables
-        self.zoom_level = 1.0
-        self.offset = pygame.math.Vector2(0, 0)
-        self.min_zoom = 1.0
-        self.max_zoom = 5.0
-        
-        # World surface to draw everything on before scaling
-        self.world_surface = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
-
-    def handle_zoom(self, event):
-        if event.type == pygame.MOUSEWHEEL:
-            old_zoom = self.zoom_level
-            
-            if event.y > 0:
-                self.zoom_level *= 1.1
-            else:
-                self.zoom_level /= 1.1
-                
-            self.zoom_level = max(self.min_zoom, min(self.max_zoom, self.zoom_level))
-            
-            # Adjust offset to zoom towards mouse pointer
-            mouse_x, mouse_y = pygame.mouse.get_pos()
-            
-            # Calculate world coordinates of mouse before zoom
-            world_x = (mouse_x - self.offset.x) / old_zoom
-            world_y = (mouse_y - self.offset.y) / old_zoom
-            
-            # Calculate new offset to keep mouse at same world coordinates
-            self.offset.x = mouse_x - world_x * self.zoom_level
-            self.offset.y = mouse_y - world_y * self.zoom_level
-            
-            # Clamp offset to keep world within screen bounds
-            # offset must be <= 0 (so top-left of world is at or left/above screen top-left)
-            # offset must be >= SCREEN_SIZE * (1 - zoom) (so bottom-right of world is at or right/below screen bottom-right)
-            self.offset.x = min(0, max(SCREEN_WIDTH * (1 - self.zoom_level), self.offset.x))
-            self.offset.y = min(0, max(SCREEN_HEIGHT * (1 - self.zoom_level), self.offset.y))
-
-    def screen_to_world(self, screen_pos):
-        return (screen_pos - self.offset) / self.zoom_level
-
-    def world_to_screen(self, world_pos):
-        return world_pos * self.zoom_level + self.offset
-
 class Simulation(object):
     
-    def __init__(self, screenSimulation,rate:RateSimulation):
+    def __init__(self, display_manager: DisplayManager, experiment_manager: ExperimentManager):
         self.target_simulation = None
-        self.screenSimulation = screenSimulation
+        self.display_manager = display_manager
+        self.experiment_manager = experiment_manager
+        
         self.start_watch = 0
         self.stop_watch = 0
-        self.rate = rate
         self.time_executing = 0 
         self.found = False
+        
         # variables for obstacles
-        self.obstacles = Obstacles(rate.in_num_obstacles[0], (SCREEN_WIDTH,SCREEN_HEIGHT))
+        self.obstacles = Obstacles(experiment_manager.in_num_obstacles[0], (SCREEN_WIDTH,SCREEN_HEIGHT))
         self.list_obst = []
         self.generate_obstacles()
 
         # Grid
         self.grid_field = GridField(RESOLUTION)
 
-        # state machines for controlling drones
-        self.behaviors =[] 
+        # Swarm Manager
+        self.swarm_manager = SwarmManager(display_manager)
         
         # Current simulations 
-        self.swarm = []
         self.targets_search = [] # memory of targets used in simulations
 
         # npc target 
@@ -190,50 +51,42 @@ class Simulation(object):
         self.all_sprites = pygame.sprite.Group()
         self.all_sprites.add(self.npc)
 
-        self.create_swarm_uav(rate.in_num_swarm[0])
+        # Create initial swarm
+        self.swarm_manager.create_swarm(experiment_manager.in_num_swarm[0])
 
         # target 
         self.target_simulation = self.generate_new_random_target()
         self.targets_search.append(self.target_simulation)
 
-        #self.set_target_using_search_pattern(self.target_simulation)
+    @property
+    def swarm(self):
+        """Proxy property for backward compatibility and ease of access."""
+        return self.swarm_manager.swarm
+
+    @property
+    def rate(self):
+        """Proxy property for backward compatibility."""
+        return self.experiment_manager
+
+    @property
+    def screenSimulation(self):
+        """Proxy property for backward compatibility."""
+        return self.display_manager
 
     def generate_obstacles(self):
         # Generates obstacles
         self.obstacles.generate_obstacles()
         self.list_obst = self.obstacles.get_coordenates()
 
-    def create_swarm_uav(self, num_swarm, search_pattern = 'DefineTargetScan'):
-        # Create N simultaneous Drones
-        for d in range(0, num_swarm):
-            # Seek state: se tem o target inicialmente:
-            if search_pattern == 'DefineTargetScan':
-                self.behaviors.append( FiniteStateMachine( SeekState() ) ) # Inicial state
-            else:
-                self.behaviors.append( FiniteStateMachine( SearchTargetState() ) ) # Inicial state
-
-            drone = Vehicle(uniform(0,100), uniform(0,100), self.behaviors[-1], self.screenSimulation.world_surface)
-            self.swarm.append(drone)
-
     def add_new_uav(self):
-        self.behaviors.append( FiniteStateMachine( SeekState() ) )
-        drone = Vehicle(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, self.behaviors[-1], self.screenSimulation.world_surface)
-
-        drone.set_target(vec2(pygame.mouse.get_pos()[0],pygame.mouse.get_pos()[1]))
-        self.append_uav(drone)
+        self.swarm_manager.add_new_uav()
     
-    def append_uav(self, drone):
-        self.swarm.append(drone)
-
     def set_target(self, target, found=False):
         self.target_simulation = target
-        for _ in self.swarm:
-            _.set_target(target)
-            if found == True:
-                _.found = True
+        self.swarm_manager.set_target(target, found)
 
     def set_time_target(self):
-        self.rate.set_time_target(time.time() - self.start_watch)
+        self.experiment_manager.set_time_target(time.time() - self.start_watch)
 
     def set_target_using_search_pattern(self, target_simulation):
         '''
@@ -282,21 +135,21 @@ class Simulation(object):
     def draw_obstacles(self):
         # draws the sprites of tree
         for _ in self.list_obst: 
-            self.obstacles.all_sprites.draw(self.screenSimulation.world_surface)
+            self.obstacles.all_sprites.draw(self.display_manager.world_surface)
             self.obstacles.all_sprites.update(_,0)
-            pygame.draw.circle(self.screenSimulation.world_surface,(200, 200, 200), _, radius=RADIUS_OBSTACLES, width=1)
-            pygame.draw.circle(self.screenSimulation.world_surface,(200, 200, 200), _, radius=RADIUS_OBSTACLES*1.6 + AVOID_DISTANCE, width=1)
+            pygame.draw.circle(self.display_manager.world_surface,(200, 200, 200), _, radius=RADIUS_OBSTACLES, width=1)
+            pygame.draw.circle(self.display_manager.world_surface,(200, 200, 200), _, radius=RADIUS_OBSTACLES*1.6 + AVOID_DISTANCE, width=1)
 
     def draw_target(self):
         # draw target - npc
         if self.target_simulation: 
-            self.all_sprites.draw(self.screenSimulation.world_surface)
+            self.all_sprites.draw(self.display_manager.world_surface)
             self.all_sprites.update(self.target_simulation,0)
-            pygame.draw.circle(self.screenSimulation.world_surface, LIGHT_BLUE, self.target_simulation, RADIUS_TARGET, 2)
+            pygame.draw.circle(self.display_manager.world_surface, LIGHT_BLUE, self.target_simulation, RADIUS_TARGET, 2)
 
     def draw(self):
         #draw grid of visited celss
-        self.grid_field.draw(self.screenSimulation.world_surface)
+        self.grid_field.draw(self.display_manager.world_surface)
         # draw target - npc
         self.draw_target()
         # draw obstacles
@@ -314,7 +167,8 @@ class Simulation(object):
             self.start_watch = time.time()
 
         # for every drone, it will update the collision avoidace, aling the direction and draw current position in simuation
-        self.rate.in_algorithms[self.rate.current_repetition].scan(self, self.list_obst)
+        # The scan method now delegates to swarm_manager.update()
+        self.experiment_manager.in_algorithms[self.experiment_manager.current_repetition].scan(self, self.list_obst)
        
         self.time_executing += SAMPLE_TIME # count time of execution based on the sampling
 
@@ -322,7 +176,7 @@ class Simulation(object):
         if self.completed_simulation() >= 0.8 and self.stop_watch == 0 or self.time_executing > TIME_MAX_SIMULATION:
             self.stop_watch = time.time()
             
-            if self.rate and self.rate.next_simulation():
+            if self.experiment_manager and self.experiment_manager.next_simulation():
                 self.rest_simulation()
             else:
                 return False
@@ -336,7 +190,7 @@ class Simulation(object):
             for _ in self.swarm:
                 if _.reached_goal(self.target_simulation):
                     count_completed = count_completed + 1 
-        return count_completed/self.rate.in_num_swarm[self.rate.current_repetition]
+        return count_completed/self.experiment_manager.in_num_swarm[self.experiment_manager.current_repetition]
 
     def generate_new_random_target(self):
         '''
@@ -365,10 +219,10 @@ class Simulation(object):
         self.grid_field = GridField(RESOLUTION)
 
         # new obstacles
-        self.obstacles.num_of_obstacles = self.rate.in_num_obstacles[self.rate.current_repetition]
+        self.obstacles.num_of_obstacles = self.experiment_manager.in_num_obstacles[self.experiment_manager.current_repetition]
         # Repeat scenario for new number of drones
-        num_repet = self.rate.in_repetitions / len(self.rate.in_num_swarm)
-        if self.rate.current_repetition > num_repet -1:
+        num_repet = self.experiment_manager.in_repetitions / len(self.experiment_manager.in_num_swarm)
+        if self.experiment_manager.current_repetition > num_repet -1:
             self.obstacles.reset_seed()
 
         self.generate_obstacles()
@@ -376,19 +230,20 @@ class Simulation(object):
         time = self.stop_watch - self.start_watch
         if self.time_executing > TIME_MAX_SIMULATION:
             time = "Goal not reached"
-        self.rate.set_out(time, self.completed_simulation())
+        self.experiment_manager.set_out(time, self.completed_simulation())
             
-        for _ in self.swarm:
-            _.set_target(None)
-            del _
-
-        self.swarm = []
+        # Clear swarm via manager
+        self.swarm_manager.swarm = []
+        
         self.start_watch = 0
         self.stop_watch = 0
         self.target_simulation = None
-        serch_patter_for_iteration = self.rate.in_algorithms[self.rate.current_repetition].to_string()
+        serch_patter_for_iteration = self.experiment_manager.in_algorithms[self.experiment_manager.current_repetition].to_string()
         print(f'ITERATION USING: {serch_patter_for_iteration} ')
-        self.create_swarm_uav(self.rate.in_num_swarm[self.rate.current_repetition], serch_patter_for_iteration)
+        
+        # Recreate swarm
+        self.swarm_manager.create_swarm(self.experiment_manager.in_num_swarm[self.experiment_manager.current_repetition], serch_patter_for_iteration)
+        
         self.time_executing = 0 # Reset timer
 
         # set new random target for iteration
@@ -397,5 +252,5 @@ class Simulation(object):
         self.set_target(target)
 
         # Prepare ALGORITHM TO SEARCH PATTERN
-        self.rate.in_algorithms[self.rate.current_repetition].prepare_simulation(self, target)
+        self.experiment_manager.in_algorithms[self.experiment_manager.current_repetition].prepare_simulation(self, target)
         self.found = False

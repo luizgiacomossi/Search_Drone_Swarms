@@ -6,7 +6,10 @@ from pygame.math import Vector2
 from constants import *
 from scan import DefineTargetScan, RowScan
 from obstacle import Obstacles
-from simulation import Simulation, ScreenSimulation, RateSimulation
+from obstacle import Obstacles
+from simulation import Simulation
+from display_manager import DisplayManager
+from experiment_manager import ExperimentManager
 from grid import GridField
 import csv
 from datetime import datetime
@@ -19,7 +22,7 @@ class DroneSimulation:
     def __init__(self):
         # Initialize pygame and screen
         pygame.init()
-        self.screen_simulation = ScreenSimulation()
+        self.display_manager = DisplayManager()
         
         # Load and scale background once
         self.background_image = self._load_background()
@@ -31,14 +34,16 @@ class DroneSimulation:
         )
         
         # Setup simulation with scan algorithms
+        self.experiment_manager = ExperimentManager(
+            10, 
+            [10], 
+            [20], 
+            [DefineTargetScan(), RowScan()]
+        )
+        
         self.simulation = Simulation(
-            self.screen_simulation, 
-            RateSimulation(
-                10, 
-                [10], 
-                [20], 
-                [DefineTargetScan(), RowScan()]
-            )
+            self.display_manager, 
+            self.experiment_manager
         )
         self.simulation.set_target(initial_target)
         
@@ -79,17 +84,17 @@ class DroneSimulation:
             
             # Handle zoom
             if event.type == pygame.MOUSEWHEEL:
-                self.screen_simulation.handle_zoom(event)
+                self.display_manager.handle_zoom(event)
                     
         return True
     
     def render_ui(self):
         """Render UI elements and text."""
         # App title
-        title = self.screen_simulation.font24.render(
+        title = self.display_manager.font24.render(
             'Swarm Search using Drones', True, LIGHT_BLUE
         )
-        self.screen_simulation.screen.blit(title, (20, 20))
+        self.display_manager.screen.blit(title, (20, 20))
         
         # Safely get current algorithm
         try:
@@ -101,17 +106,17 @@ class DroneSimulation:
             else:
                 search = "Unknown"
                 
-            search_text = self.screen_simulation.font24.render(
+            search_text = self.display_manager.font24.render(
                 f'Search using: {search}', True, LIGHT_BLUE
             )
-            self.screen_simulation.screen.blit(search_text, (800, 20))
+            self.display_manager.screen.blit(search_text, (800, 20))
         except Exception as e:
             print(f"Error rendering search algorithm: {e}")
             # Fallback text if there's an error
-            fallback = self.screen_simulation.font24.render(
+            fallback = self.display_manager.font24.render(
                 'Search algorithm: N/A', True, LIGHT_BLUE
             )
-            self.screen_simulation.screen.blit(fallback, (800, 20))
+            self.display_manager.screen.blit(fallback, (800, 20))
         
         # Render mission stats
         self._render_mission_stats()
@@ -139,18 +144,18 @@ class DroneSimulation:
                         f'{idx+1} - Search: {search} - '
                         f'Scan Time: {time:.2f}, {sim_idx_info}'
                     )
-                    img = self.screen_simulation.font20.render(text, True, LIGHT_BLUE)
+                    img = self.display_manager.font20.render(text, True, LIGHT_BLUE)
                 except:
                     # Simple fallback text
                     text = f'{idx+1} - Scan Time: {time:.2f}'
-                    img = self.screen_simulation.font16.render(text, True, LIGHT_BLUE)
+                    img = self.display_manager.font16.render(text, True, LIGHT_BLUE)
                     
-                self.screen_simulation.screen.blit(img, (20, 20*(idx+2)))
+                self.display_manager.screen.blit(img, (20, 20*(idx+2)))
         except Exception as e:
             # If even the rendering of mission stats fails
             print(f"Error rendering mission stats: {e}")
-            img = self.screen_simulation.font16.render("Error displaying mission stats", True, LIGHT_BLUE)
-            self.screen_simulation.screen.blit(img, (20, 40))
+            img = self.display_manager.font16.render("Error displaying mission stats", True, LIGHT_BLUE)
+            self.display_manager.screen.blit(img, (20, 40))
     
     def run(self):
         """Main simulation loop with robust error handling."""
@@ -159,14 +164,14 @@ class DroneSimulation:
         try:
             while running:
                 # Handle frame timing
-                self.screen_simulation.clock.tick(FREQUENCY)
+                self.display_manager.clock.tick(FREQUENCY)
                 
                 # Process events
                 running = self.handle_events()
                 
                 # Draw background
                 # Draw background to world surface
-                self.screen_simulation.world_surface.blit(self.background_image, (0, 0))
+                self.display_manager.world_surface.blit(self.background_image, (0, 0))
                 
                 # Update simulation state
                 sim_running = self.simulation.run_simulation()
@@ -175,12 +180,12 @@ class DroneSimulation:
                     
                 # Scale and blit world surface to screen
                 scaled_surface = pygame.transform.scale(
-                    self.screen_simulation.world_surface, 
-                    (int(SCREEN_WIDTH * self.screen_simulation.zoom_level), 
-                     int(SCREEN_HEIGHT * self.screen_simulation.zoom_level))
+                    self.display_manager.world_surface, 
+                    (int(SCREEN_WIDTH * self.display_manager.zoom_level), 
+                     int(SCREEN_HEIGHT * self.display_manager.zoom_level))
                 )
-                self.screen_simulation.screen.fill((50, 50, 50)) # Clear screen
-                self.screen_simulation.screen.blit(scaled_surface, self.screen_simulation.offset)
+                self.display_manager.screen.fill((50, 50, 50)) # Clear screen
+                self.display_manager.screen.blit(scaled_surface, self.display_manager.offset)
 
                 # Render UI elements (on top of everything, not zoomed)
                 self.render_ui()
