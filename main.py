@@ -4,7 +4,7 @@ import pygame
 import matplotlib.pyplot as plt
 from pygame.math import Vector2
 from constants import *
-from scan import DefineTargetScan, RowScan, MeshScan, SnookerScan
+from scan import DefineTargetScan, RowScan, MeshScan, SnookerScan, RandoWalkScan
 from obstacle import Obstacles
 from simulation import Simulation
 from display_manager import DisplayManager
@@ -26,25 +26,18 @@ class DroneSimulation:
         # Load and scale background once
         self.background_image = self._load_background()
         
-        # Set up initial target position
-        initial_target = Vector2(
-            random.uniform(0, SCREEN_WIDTH/2), 
-            random.uniform(0, SCREEN_HEIGHT/2)
-        )
-        
         # Setup simulation with scan algorithms
         self.experiment_manager = ExperimentManager(
             10, 
             [10], 
             [20], 
-            [DefineTargetScan(), RowScan(), MeshScan(), SnookerScan()]
+            [DefineTargetScan(), RowScan()]
         )
         
         self.simulation = Simulation(
             self.display_manager, 
             self.experiment_manager
         )
-        self.simulation.set_target(initial_target)
         
     def _load_background(self):
         """Load and prepare the background image."""

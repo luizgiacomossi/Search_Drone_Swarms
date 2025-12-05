@@ -12,7 +12,8 @@ class Obstacles(object):
         self.num_of_obstacles = num_of_obstacles
         self.map_size = map_size
         self.obst = []
-        self.seed = random.seed(0)
+        # Use a local Random instance to avoid affecting global state
+        self.rng = random.Random(0)
         self.times_generated = 0
         # Variables to draw tree using Sprites
         self.tree = Tree() 
@@ -22,11 +23,12 @@ class Obstacles(object):
     def generate_obstacles(self):
         self.obst = []
         self.times_generated += 1
-        self.seed = random.seed(self.times_generated+10 )
+        # Seed the local generator, not the global one
+        self.rng.seed(self.times_generated+10 )
         valid = False
         for _ in range(self.num_of_obstacles):
-            coord = vec2(random.uniform(200,self.map_size[0] + AVOID_OBSTACLES),
-                        random.uniform(RADIUS_TARGET,self.map_size[1])- AVOID_OBSTACLES)
+            coord = vec2(self.rng.uniform(200,self.map_size[0] + AVOID_OBSTACLES),
+                        self.rng.uniform(RADIUS_TARGET,self.map_size[1])- AVOID_OBSTACLES)
 
             self.obst.append(coord) 
                                   
@@ -34,7 +36,7 @@ class Obstacles(object):
         return self.obst
 
     def reset_seed(self):
-        self.seed = random.seed(0)
+        self.rng.seed(0)
         self.times_generated = 0
         
 

@@ -199,7 +199,13 @@ class Simulation(object):
         found_valid_target= False 
         while not found_valid_target : 
             # generates new point
-            target = vec2(uniform(SCREEN_WIDTH/3,SCREEN_WIDTH), uniform(100,SCREEN_HEIGHT))
+            # Avoid top-left corner (0-200, 0-200) where drones spawn
+            target = vec2(uniform(100, SCREEN_WIDTH-100), uniform(100, SCREEN_HEIGHT-100))
+            
+            # Check distance from spawn (0,0)
+            if target.length() < 300:
+                continue
+
             c=0
             #checks if it is valid
             for o in self.list_obst:

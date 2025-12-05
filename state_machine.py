@@ -164,10 +164,14 @@ class GoToClosestDroneState(State):
 
         self.target = agent.get_closest_drone()
 
-        agent.arrive(self.target)
-        self.time_executing +=SAMPLE_TIME
-        
-        if (self.target - agent.location).length() < SIZE_DRONE*2*1.4 :
+        if self.target is not None:
+            agent.arrive(self.target)
+            self.time_executing +=SAMPLE_TIME
+            
+            if (self.target - agent.location).length() < SIZE_DRONE*2*1.4 :
+                self.finished = True
+        else:
+            # No closest drone found, abort state
             self.finished = True
     
 class RandomTargetState(State):
