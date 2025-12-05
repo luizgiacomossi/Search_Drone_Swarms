@@ -27,6 +27,12 @@ class GridField(object):
         heapq.heapify(self.h_cells)
 
         self.create_grid_cells()
+        
+        # Optimization: Create a surface to cache the grid
+        self.grid_surface = pg.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
+        self.grid_surface.set_colorkey((0,0,0)) # Transparent background if needed, or just fill
+        self.grid_surface.fill(BLACK) # Or whatever background color
+        self.draw_static_grid()
    
     def create_grid_cells(self):
         '''
@@ -41,22 +47,29 @@ class GridField(object):
                 # Priority queue HEAP
                 heapq.heappush(self.h_cells, (self.cells[row][col].state, (row, col)))
 
-    def draw(self, screen):
-
-        blockSize = self.resolution #Set the size of the grid block
-
+    def draw_static_grid(self):
+        """Draws the initial grid to the cached surface."""
+        blockSize = self.resolution
         for x in range(0, SCREEN_WIDTH, blockSize):
             for y in range(0, SCREEN_HEIGHT, blockSize):
                 rect = pg.Rect(x, y, blockSize, blockSize)
-                pg.draw.rect(screen, (120,120,120), rect, 1)
-                self.cells[int(y/blockSize)][int(x/blockSize)].draw_center(screen)
+                pg.draw.rect(self.grid_surface, (120,120,120), rect, 1)
+                self.cells[int(y/blockSize)][int(x/blockSize)].draw_center(self.grid_surface)
+
+    def draw(self, screen):
+        """Blits the cached grid surface to the screen."""
+        screen.blit(self.grid_surface, (0, 0))
 
     def change_state_cell(self, cell, to_state = VISITED):
         '''
             Cell is visitated
         '''
         try:
-            self.cells[cell[1]][cell[0]].change_state(to_state)
+            c = self.cells[cell[1]][cell[0]]
+            if c.state != to_state and c.state != OBSTACLE:
+                c.change_state(to_state)
+                # Optimization: Update only this cell on the surface
+                c.draw_center(self.grid_surface)
         except:
             pass
 
