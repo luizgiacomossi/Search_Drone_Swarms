@@ -93,6 +93,9 @@ class RateSimulation(object):
         #plt.plot(t, t, 'r--', t, t**2, 'bs', t, t**3, 'g^') 
 
     def save_csv(self):
+        if not SAVE_RESULTS:
+            return
+            
         with open('result.csv', 'w', newline='') as file:
             writer = csv.writer(file)
             writer.writerow(["Execution", "N Drones", "N Obstacles", "Algorithm", "Time Found Target", "Time Mission Completed"])
@@ -113,6 +116,49 @@ class ScreenSimulation(object):
         self.size = SCREEN_WIDTH, SCREEN_HEIGHT 
         self.clock = pygame.time.Clock()
         self.screen = pygame.display.set_mode(self.size)
+        
+        # Zoom and Pan variables
+        self.zoom_level = 1.0
+        self.offset = pygame.math.Vector2(0, 0)
+        self.min_zoom = 1.0
+        self.max_zoom = 5.0
+        
+        # World surface to draw everything on before scaling
+        self.world_surface = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
+
+    def handle_zoom(self, event):
+        if event.type == pygame.MOUSEWHEEL:
+            old_zoom = self.zoom_level
+            
+            if event.y > 0:
+                self.zoom_level *= 1.1
+            else:
+                self.zoom_level /= 1.1
+                
+            self.zoom_level = max(self.min_zoom, min(self.max_zoom, self.zoom_level))
+            
+            # Adjust offset to zoom towards mouse pointer
+            mouse_x, mouse_y = pygame.mouse.get_pos()
+            
+            # Calculate world coordinates of mouse before zoom
+            world_x = (mouse_x - self.offset.x) / old_zoom
+            world_y = (mouse_y - self.offset.y) / old_zoom
+            
+            # Calculate new offset to keep mouse at same world coordinates
+            self.offset.x = mouse_x - world_x * self.zoom_level
+            self.offset.y = mouse_y - world_y * self.zoom_level
+            
+            # Clamp offset to keep world within screen bounds
+            # offset must be <= 0 (so top-left of world is at or left/above screen top-left)
+            # offset must be >= SCREEN_SIZE * (1 - zoom) (so bottom-right of world is at or right/below screen bottom-right)
+            self.offset.x = min(0, max(SCREEN_WIDTH * (1 - self.zoom_level), self.offset.x))
+            self.offset.y = min(0, max(SCREEN_HEIGHT * (1 - self.zoom_level), self.offset.y))
+
+    def screen_to_world(self, screen_pos):
+        return (screen_pos - self.offset) / self.zoom_level
+
+    def world_to_screen(self, world_pos):
+        return world_pos * self.zoom_level + self.offset
 
 class Simulation(object):
     
@@ -166,12 +212,12 @@ class Simulation(object):
             else:
                 self.behaviors.append( FiniteStateMachine( SearchTargetState() ) ) # Inicial state
 
-            drone = Vehicle(uniform(0,100), uniform(0,100), self.behaviors[-1], self.screenSimulation.screen)
+            drone = Vehicle(uniform(0,100), uniform(0,100), self.behaviors[-1], self.screenSimulation.world_surface)
             self.swarm.append(drone)
 
     def add_new_uav(self):
         self.behaviors.append( FiniteStateMachine( SeekState() ) )
-        drone = Vehicle(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, self.behaviors[-1], self.screenSimulation.screen)
+        drone = Vehicle(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, self.behaviors[-1], self.screenSimulation.world_surface)
 
         drone.set_target(vec2(pygame.mouse.get_pos()[0],pygame.mouse.get_pos()[1]))
         self.append_uav(drone)
@@ -236,21 +282,21 @@ class Simulation(object):
     def draw_obstacles(self):
         # draws the sprites of tree
         for _ in self.list_obst: 
-            self.obstacles.all_sprites.draw(self.screenSimulation.screen)
+            self.obstacles.all_sprites.draw(self.screenSimulation.world_surface)
             self.obstacles.all_sprites.update(_,0)
-            pygame.draw.circle(self.screenSimulation.screen,(200, 200, 200), _, radius=RADIUS_OBSTACLES, width=1)
-            pygame.draw.circle(self.screenSimulation.screen,(200, 200, 200), _, radius=RADIUS_OBSTACLES*1.6 + AVOID_DISTANCE, width=1)
+            pygame.draw.circle(self.screenSimulation.world_surface,(200, 200, 200), _, radius=RADIUS_OBSTACLES, width=1)
+            pygame.draw.circle(self.screenSimulation.world_surface,(200, 200, 200), _, radius=RADIUS_OBSTACLES*1.6 + AVOID_DISTANCE, width=1)
 
     def draw_target(self):
         # draw target - npc
         if self.target_simulation: 
-            self.all_sprites.draw(self.screenSimulation.screen)
+            self.all_sprites.draw(self.screenSimulation.world_surface)
             self.all_sprites.update(self.target_simulation,0)
-            pygame.draw.circle(self.screenSimulation.screen, LIGHT_BLUE, self.target_simulation, RADIUS_TARGET, 2)
+            pygame.draw.circle(self.screenSimulation.world_surface, LIGHT_BLUE, self.target_simulation, RADIUS_TARGET, 2)
 
     def draw(self):
         #draw grid of visited celss
-        self.grid_field.draw(self.screenSimulation.screen)
+        self.grid_field.draw(self.screenSimulation.world_surface)
         # draw target - npc
         self.draw_target()
         # draw obstacles

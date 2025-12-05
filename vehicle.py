@@ -6,7 +6,6 @@ import random
 import copy 
 import numpy as np
 from typing import List, Optional, Tuple, Union
-from quadtree import Quadtree, Rect
 
 
 vec2 = pg.math.Vector2
@@ -322,37 +321,27 @@ class Vehicle(object):
     def get_debug(self):
         return str(self.debug)
 
-    def align_direction_with_swarm(self, quadtree: Quadtree, index):
+    def align_direction_with_swarm(self, all_positions, index):
         """
          This method avoids collisions with other drones
-         During simulation it receives the quadtree containing all drones 
+         During simulation it receives all the positions from all drones 
          index: is the current id of drone being checked 
         """
-        # Define search range
-        separation_factor = 2.2
-        search_radius = AVOID_DISTANCE * separation_factor
-        range_rect = Rect(self.location.x, self.location.y, search_radius, search_radius)
-        
-        # Query quadtree for nearby drones
-        nearby_drones = []
-        quadtree.query(range_rect, nearby_drones)
-
+        # gets all positions of simultaneos drones
+        aux = 0 
         soma = vec2(0,0) # sums up all directions of close drones
         count = 0 # counts the number of drones that are close
-        
-        for p in nearby_drones:
-            # compares current position to all the drones
-            # p != self -> avoids the auto-collision check
-            if p == self:
-                continue
-                
+        for p in all_positions:
+        # compares current position to all the drones
+        # aux != index -> avoids the auto-collision check
             d = (self.location - p.location).magnitude()
-            
-            if (d > 0) and (d < search_radius):
+            separation_factor = 2.2
+            if ( (d > 0) and (d < AVOID_DISTANCE*separation_factor) and (aux != index) ) :
                 diff = (self.location - p.location).normalize()
                 diff = diff/d # proporcional to the distance. The closer the stronger needs to be
                 soma += diff
                 count += 1 # p drone is close 
+            aux+=1
             
         if count > 0:
             media = soma / count
@@ -392,29 +381,20 @@ class Vehicle(object):
         self.all_sprites.update(self.location, self.rotation)
 
 
-    def collision_avoidance(self, quadtree: Quadtree, pos_obstacles: List[vec2], index: int) -> None:
+    def collision_avoidance(self, positions_drones: List['Vehicle'], pos_obstacles: List[vec2], index: int) -> None:
         """
         Advanced collision avoidance with drones and obstacles.
         
         Args:
-            quadtree (Quadtree): Quadtree containing all drones
+            positions_drones (List[Vehicle]): All drones in the swarm
             pos_obstacles (List[vec2]): Obstacle positions
             index (int): Current drone's index
         """
         # Drone collision avoidance
         closest = +inf
         factor_distance = 2
-        search_radius = AVOID_DISTANCE * factor_distance
-        
-        # Query quadtree for nearby drones
-        range_rect = Rect(self.location.x, self.location.y, search_radius, search_radius)
-        nearby_drones = []
-        quadtree.query(range_rect, nearby_drones)
 
-        for p in nearby_drones:
-            if p == self:
-                continue
-                
+        for aux, p in enumerate(positions_drones):
             d = (self.location - p.location).magnitude()
             
             # Find closest drone
@@ -423,7 +403,7 @@ class Vehicle(object):
                 self.closest_drone = copy.deepcopy(p.location)
             
             # Collision prevention
-            if d < search_radius:
+            if aux != index and d < AVOID_DISTANCE * factor_distance:
                 f_repulsion = derivativeBivariate(0.001, 0.001, p.location, self.location) / SAMPLE_TIME
                 f_repulsion = limit(f_repulsion, self.max_force * 1.8)
                 self.applyForce(-f_repulsion)

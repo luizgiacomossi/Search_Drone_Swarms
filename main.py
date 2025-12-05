@@ -76,6 +76,10 @@ class DroneSimulation:
                 # Right-click: add new drone
                 if pygame.mouse.get_pressed()[2]:
                     self.simulation.add_new_uav()
+            
+            # Handle zoom
+            if event.type == pygame.MOUSEWHEEL:
+                self.screen_simulation.handle_zoom(event)
                     
         return True
     
@@ -161,14 +165,24 @@ class DroneSimulation:
                 running = self.handle_events()
                 
                 # Draw background
-                self.screen_simulation.screen.blit(self.background_image, (0, 0))
+                # Draw background to world surface
+                self.screen_simulation.world_surface.blit(self.background_image, (0, 0))
                 
                 # Update simulation state
                 sim_running = self.simulation.run_simulation()
                 if not sim_running:
                     running = False
                     
-                # Render UI elements
+                # Scale and blit world surface to screen
+                scaled_surface = pygame.transform.scale(
+                    self.screen_simulation.world_surface, 
+                    (int(SCREEN_WIDTH * self.screen_simulation.zoom_level), 
+                     int(SCREEN_HEIGHT * self.screen_simulation.zoom_level))
+                )
+                self.screen_simulation.screen.fill((50, 50, 50)) # Clear screen
+                self.screen_simulation.screen.blit(scaled_surface, self.screen_simulation.offset)
+
+                # Render UI elements (on top of everything, not zoomed)
                 self.render_ui()
                 
                 # Update display
@@ -191,6 +205,10 @@ class DroneSimulation:
     
     def _guaranteed_save_results(self):
         """Custom save method that doesn't rely on the original save_csv."""
+        if not SAVE_RESULTS:
+            print("CSV saving disabled in constants.py")
+            return
+
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"simulation_results_{timestamp}.csv"
         
@@ -244,6 +262,9 @@ class DroneSimulation:
     
     def _emergency_save_results(self):
         """Absolute minimum save functionality as last resort."""
+        if not SAVE_RESULTS:
+            return
+
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"emergency_backup_{timestamp}.csv"
         

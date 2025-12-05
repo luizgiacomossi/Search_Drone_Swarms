@@ -34,3 +34,6 @@ BLACK = (0,0,0)
 LIGHT_BLUE = (224, 255, 255)
 BLUE = (0,0,255)
 RED = (255,0,0)
+
+# Saving
+SAVE_RESULTS = False # Set to True to save simulation results to CSV
