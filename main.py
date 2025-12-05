@@ -171,14 +171,46 @@ class DroneSimulation:
                     running = False
                 
     
-                # Scale and blit world surface to screen
-                scaled_surface = pygame.transform.scale(
-                    self.display_manager.world_surface, 
-                    (int(WORLD_WIDTH * self.display_manager.zoom_level), 
-                     int(WORLD_HEIGHT * self.display_manager.zoom_level))
-                )
+                # Smart rendering to avoid scaling huge surfaces
+                zoom = self.display_manager.zoom_level
+                offset = self.display_manager.offset
+                
                 self.display_manager.screen.fill((50, 50, 50)) # Clear screen
-                self.display_manager.screen.blit(scaled_surface, self.display_manager.offset)
+
+                # If zoomed in enough that world covers screen (or mostly)
+                # We crop the visible area and scale ONLY that.
+                # This prevents creating massive surfaces (e.g. 20k x 10k pixels) when zooming in.
+                if zoom > 1.0:
+                    # Calculate visible world area
+                    # world_x = (screen_x - offset_x) / zoom
+                    wx = -offset.x / zoom
+                    wy = -offset.y / zoom
+                    ww = SCREEN_WIDTH / zoom
+                    wh = SCREEN_HEIGHT / zoom
+                    
+                    # Clamp to world bounds to avoid errors
+                    wx = max(0, wx)
+                    wy = max(0, wy)
+                    ww = min(ww, WORLD_WIDTH - wx)
+                    wh = min(wh, WORLD_HEIGHT - wy)
+                    
+                    if ww > 0 and wh > 0:
+                        try:
+                            subsurf = self.display_manager.world_surface.subsurface(pygame.Rect(wx, wy, ww, wh))
+                            scaled_surf = pygame.transform.scale(subsurf, (int(ww * zoom), int(wh * zoom)))
+                            self.display_manager.screen.blit(scaled_surf, (0, 0))
+                        except Exception as e:
+                            # Fallback if subsurface fails (e.g. out of bounds due to float precision)
+                            print(f"Render error: {e}")
+                            pass
+                else:
+                    # Zoomed out or normal: scale the whole world (it's small enough)
+                    scaled_surface = pygame.transform.scale(
+                        self.display_manager.world_surface, 
+                        (int(WORLD_WIDTH * zoom), 
+                         int(WORLD_HEIGHT * zoom))
+                    )
+                    self.display_manager.screen.blit(scaled_surface, offset)
 
                 # Render UI elements (on top of everything, not zoomed)
                 self.render_ui()
