@@ -1,4 +1,5 @@
 from constants import *
+from quadtree import Quadtree, Rect
 from typing import List, Optional
 
 
@@ -22,7 +23,7 @@ class ScanInterface:
         """
         pass  # Default implementation does nothing
 
-    def update_drone(self, drone, simulation, list_obst, index) -> None:
+    def update_drone(self, drone, simulation, list_obst, index, quadtree) -> None:
         """Updates a drone's behavior, position, and renders it.
         
         This method aligns the drone with the swarm, performs collision avoidance,
@@ -33,9 +34,10 @@ class ScanInterface:
             simulation: The current simulation
             list_obst: List of obstacles
             index: Index of the drone in the swarm
+            quadtree: Quadtree containing all drones
         """
-        drone.align_direction_with_swarm(simulation.swarm, index)
-        drone.collision_avoidance(simulation.swarm, list_obst, index) 
+        drone.align_direction_with_swarm(quadtree, index)
+        drone.collision_avoidance(quadtree, list_obst, index) 
         drone.update()
         drone.draw(simulation.screenSimulation.screen) 
     
@@ -117,12 +119,19 @@ class ScanInterface:
         """
         target_found = False
         
+        # Build Quadtree
+        boundary = Rect(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, SCREEN_WIDTH/2, SCREEN_HEIGHT/2)
+        quadtree = Quadtree(boundary, 4) # Capacity 4
+        
+        for drone in simulation.swarm:
+            quadtree.insert(drone.location, drone)
+        
         for index, drone in enumerate(simulation.swarm):
             # Update grid with drone's position
             self.update_grid(drone, simulation)
             
             # Handle drone movement and collision avoidance
-            self.update_drone(drone, simulation, list_obst, index)
+            self.update_drone(drone, simulation, list_obst, index, quadtree)
             
             # Draw the drone's information
             self.draw_legend(drone, simulation, index)
