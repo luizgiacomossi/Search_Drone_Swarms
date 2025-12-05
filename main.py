@@ -3,7 +3,7 @@ import random
 import pygame
 import matplotlib.pyplot as plt
 from pygame.math import Vector2
-from constants import *
+from constants import SCREEN_WIDTH, SCREEN_HEIGHT, WORLD_WIDTH, WORLD_HEIGHT, LIGHT_BLUE, FREQUENCY, SAVE_RESULTS
 from scan import DefineTargetScan, RowScan, MeshScan, SnookerScan, RandoWalkScan
 from obstacle import Obstacles
 from simulation import Simulation
@@ -43,11 +43,11 @@ class DroneSimulation:
         """Load and prepare the background image."""
         try:
             bg_image = pygame.image.load("models/texture/camouflage.png").convert()
-            return pygame.transform.scale(bg_image, (SCREEN_WIDTH, SCREEN_HEIGHT))
+            return pygame.transform.scale(bg_image, (WORLD_WIDTH, WORLD_HEIGHT))
         except pygame.error as e:
             print(f"Error loading background: {e}")
             # Create a fallback background if image loading fails
-            fallback = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
+            fallback = pygame.Surface((WORLD_WIDTH, WORLD_HEIGHT))
             fallback.fill((50, 50, 50))  # Dark gray background
             return fallback
             
@@ -65,10 +65,11 @@ class DroneSimulation:
             # Handle mouse events
             if event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_pos = Vector2(pygame.mouse.get_pos())
+                world_pos = self.display_manager.screen_to_world(mouse_pos)
                 
                 # Left-click: set new target
                 if pygame.mouse.get_pressed()[0]:
-                    self.simulation.set_target(mouse_pos)
+                    self.simulation.set_target(world_pos)
                     
                 # Right-click: add new drone
                 if pygame.mouse.get_pressed()[2]:
@@ -173,8 +174,8 @@ class DroneSimulation:
                 # Scale and blit world surface to screen
                 scaled_surface = pygame.transform.scale(
                     self.display_manager.world_surface, 
-                    (int(SCREEN_WIDTH * self.display_manager.zoom_level), 
-                     int(SCREEN_HEIGHT * self.display_manager.zoom_level))
+                    (int(WORLD_WIDTH * self.display_manager.zoom_level), 
+                     int(WORLD_HEIGHT * self.display_manager.zoom_level))
                 )
                 self.display_manager.screen.fill((50, 50, 50)) # Clear screen
                 self.display_manager.screen.blit(scaled_surface, self.display_manager.offset)

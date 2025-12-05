@@ -2,6 +2,9 @@
 SCREEN_WIDTH = 1920
 SCREEN_HEIGHT = 1080
 
+WORLD_WIDTH = 3840
+WORLD_HEIGHT = 2160
+
 
 PIX2M = 0.01  # factor to convert from pixels to meters
 M2PIX = 100.0  # factor to convert from meters to pixels

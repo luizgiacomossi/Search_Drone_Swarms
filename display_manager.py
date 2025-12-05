@@ -1,5 +1,5 @@
 import pygame
-from constants import SCREEN_WIDTH, SCREEN_HEIGHT
+from constants import SCREEN_WIDTH, SCREEN_HEIGHT, WORLD_WIDTH, WORLD_HEIGHT
 
 class DisplayManager(object):
     '''
@@ -17,11 +17,12 @@ class DisplayManager(object):
         # Zoom and Pan variables
         self.zoom_level = 1.0
         self.offset = pygame.math.Vector2(0, 0)
-        self.min_zoom = 1.0
+        # Calculate min_zoom to fit the world in the screen
+        self.min_zoom = min(SCREEN_WIDTH / WORLD_WIDTH, SCREEN_HEIGHT / WORLD_HEIGHT)
         self.max_zoom = 5.0
         
         # World surface to draw everything on before scaling
-        self.world_surface = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
+        self.world_surface = pygame.Surface((WORLD_WIDTH, WORLD_HEIGHT))
 
     def handle_zoom(self, event):
         if event.type == pygame.MOUSEWHEEL:
@@ -46,8 +47,18 @@ class DisplayManager(object):
             self.offset.y = mouse_y - world_y * self.zoom_level
             
             # Clamp offset to keep world within screen bounds
-            self.offset.x = min(0, max(SCREEN_WIDTH * (1 - self.zoom_level), self.offset.x))
-            self.offset.y = min(0, max(SCREEN_HEIGHT * (1 - self.zoom_level), self.offset.y))
+            current_world_width = WORLD_WIDTH * self.zoom_level
+            current_world_height = WORLD_HEIGHT * self.zoom_level
+            
+            if current_world_width >= SCREEN_WIDTH:
+                self.offset.x = max(SCREEN_WIDTH - current_world_width, min(0, self.offset.x))
+            else:
+                self.offset.x = (SCREEN_WIDTH - current_world_width) / 2
+                
+            if current_world_height >= SCREEN_HEIGHT:
+                self.offset.y = max(SCREEN_HEIGHT - current_world_height, min(0, self.offset.y))
+            else:
+                self.offset.y = (SCREEN_HEIGHT - current_world_height) / 2
 
     def screen_to_world(self, screen_pos):
         return (screen_pos - self.offset) / self.zoom_level

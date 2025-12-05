@@ -85,7 +85,7 @@ class Vehicle(object):
         if self.velocity.length() > 0.8:
             self.rotation = atan2(self.velocity.y,self.velocity.x)
         # Constrains position to limits of screen
-        self.location = constrain(self.location,SCREEN_WIDTH,SCREEN_HEIGHT)
+        self.location = constrain(self.location,WORLD_WIDTH,WORLD_HEIGHT)
         self.acceleration *= 0
 
         # Memory of positions to draw Track

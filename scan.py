@@ -103,8 +103,8 @@ class RandoWalkScan(ScanInterface):
             if drone.reached_goal(drone.target) or drone.target is None:
                 # Generate new random target
                 new_target = pygame.math.Vector2(
-                    random.uniform(0, SCREEN_WIDTH),
-                    random.uniform(0, SCREEN_HEIGHT)
+                    random.uniform(0, WORLD_WIDTH),
+                    random.uniform(0, WORLD_HEIGHT)
                 )
                 drone.set_target(new_target)
 
@@ -140,12 +140,12 @@ class SnookerScan(ScanInterface):
             bounce = False
             
             # Check horizontal walls
-            if (pos.x < margin and vel.x < 0) or (pos.x > SCREEN_WIDTH - margin and vel.x > 0):
+            if (pos.x < margin and vel.x < 0) or (pos.x > WORLD_WIDTH - margin and vel.x > 0):
                 vel.x *= -1
                 bounce = True
                 
             # Check vertical walls
-            if (pos.y < margin and vel.y < 0) or (pos.y > SCREEN_HEIGHT - margin and vel.y > 0):
+            if (pos.y < margin and vel.y < 0) or (pos.y > WORLD_HEIGHT - margin and vel.y > 0):
                 vel.y *= -1
                 bounce = True
             
@@ -243,8 +243,8 @@ class MeshScan(ScanInterface):
                 else:
                     # Fallback to random position if stuck
                     next_target_pos = pygame.math.Vector2(
-                        random.uniform(0, SCREEN_WIDTH),
-                        random.uniform(0, SCREEN_HEIGHT)
+                        random.uniform(0, WORLD_WIDTH),
+                        random.uniform(0, WORLD_HEIGHT)
                     )
                 
                 if next_target_pos:

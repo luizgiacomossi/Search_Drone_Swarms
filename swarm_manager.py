@@ -3,7 +3,7 @@ from random import uniform
 from typing import List
 from vehicle import Vehicle
 from state_machine import FiniteStateMachine, SeekState, SearchTargetState
-from constants import SCREEN_WIDTH, SCREEN_HEIGHT, LIGHT_BLUE, RESOLUTION
+from constants import SCREEN_WIDTH, SCREEN_HEIGHT, LIGHT_BLUE, RESOLUTION, WORLD_WIDTH, WORLD_HEIGHT
 from quadtree import Quadtree, Rect
 
 vec2 = pygame.math.Vector2
@@ -29,7 +29,7 @@ class SwarmManager:
 
     def add_new_uav(self):
         self.behaviors.append( FiniteStateMachine( SeekState() ) )
-        drone = Vehicle(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, self.behaviors[-1], self.display_manager.world_surface)
+        drone = Vehicle(WORLD_WIDTH/2, WORLD_HEIGHT/2, self.behaviors[-1], self.display_manager.world_surface)
 
         # Convert mouse position to world coordinates for target
         mouse_pos = vec2(pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1])
@@ -53,7 +53,7 @@ class SwarmManager:
         4. Draws drones
         """
         # Build Quadtree
-        boundary = Rect(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, SCREEN_WIDTH/2, SCREEN_HEIGHT/2)
+        boundary = Rect(WORLD_WIDTH/2, WORLD_HEIGHT/2, WORLD_WIDTH/2, WORLD_HEIGHT/2)
         quadtree = Quadtree(boundary, 4) # Capacity 4
         
         for drone in self.swarm:

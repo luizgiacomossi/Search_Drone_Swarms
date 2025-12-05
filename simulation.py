@@ -33,7 +33,7 @@ class Simulation(object):
         self.found = False
         
         # variables for obstacles
-        self.obstacles = Obstacles(experiment_manager.in_num_obstacles[0], (SCREEN_WIDTH,SCREEN_HEIGHT))
+        self.obstacles = Obstacles(experiment_manager.in_num_obstacles[0], (WORLD_WIDTH,WORLD_HEIGHT))
         self.list_obst = []
         self.generate_obstacles()
 
@@ -200,7 +200,7 @@ class Simulation(object):
         while not found_valid_target : 
             # generates new point
             # Avoid top-left corner (0-200, 0-200) where drones spawn
-            target = vec2(uniform(100, SCREEN_WIDTH-100), uniform(100, SCREEN_HEIGHT-100))
+            target = vec2(uniform(100, WORLD_WIDTH-100), uniform(100, WORLD_HEIGHT-100))
             
             # Check distance from spawn (0,0)
             if target.length() < 300:

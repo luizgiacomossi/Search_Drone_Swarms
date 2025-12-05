@@ -16,9 +16,8 @@ OBSTACLE = 2
 
 class GridField(object):
     def __init__(self, resolution):
-
-        self.cols =int(SCREEN_WIDTH/resolution)  # Columns of the grid
-        self.rows = int(SCREEN_HEIGHT/resolution)  # Rows of the grid
+        self.cols =int(WORLD_WIDTH/resolution)  # Columns of the grid
+        self.rows = int(WORLD_HEIGHT/resolution)  # Rows of the grid
         self.cells =  np.ndarray((self.rows+1,self.cols+1), dtype=Cell) # grid memory using numpy array
         self.resolution = resolution # Resolution of grid relative to window width and height in pixels
         print(f' Grid created with  col:{self.cols} row:{self.rows}')
@@ -33,8 +32,8 @@ class GridField(object):
             Creates grid with cells according to resolution 
         '''
         blockSize = self.resolution
-        for x in range(0, SCREEN_WIDTH, blockSize):
-            for y in range(0, SCREEN_HEIGHT, blockSize):
+        for x in range(0, WORLD_WIDTH, blockSize):
+            for y in range(0, WORLD_HEIGHT, blockSize):
                 row = int(y / blockSize)
                 col = int(x / blockSize)
                 self.cells[row][col] = Cell(vec(x, y), blockSize)
@@ -45,8 +44,8 @@ class GridField(object):
 
         blockSize = self.resolution #Set the size of the grid block
 
-        for x in range(0, SCREEN_WIDTH, blockSize):
-            for y in range(0, SCREEN_HEIGHT, blockSize):
+        for x in range(0, WORLD_WIDTH, blockSize):
+            for y in range(0, WORLD_HEIGHT, blockSize):
                 rect = pg.Rect(x, y, blockSize, blockSize)
                 pg.draw.rect(screen, (120,120,120), rect, 1)
                 self.cells[int(y/blockSize)][int(x/blockSize)].draw_center(screen)

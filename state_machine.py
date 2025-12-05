@@ -219,8 +219,8 @@ class SearchTargetState(State):
         self.finished = False
 
         # Map resolution
-        self.cols =int(SCREEN_WIDTH/RESOLUTION)  # Columns of the grid
-        self.rows = int(SCREEN_HEIGHT/RESOLUTION)  # Rows of the grid
+        self.cols =int(WORLD_WIDTH/RESOLUTION)  # Columns of the grid
+        self.rows = int(WORLD_HEIGHT/RESOLUTION)  # Rows of the grid
         
         # waypoints to be followed
         self.waypoints = []
@@ -273,7 +273,7 @@ class SearchTargetState(State):
             if self.time_blocked > 2:
                 self.time_blocked = 0
                 #state_machine.change_state(SearchTargetState())  
-                self.target = vec2(random.uniform(0,SCREEN_WIDTH),random.uniform(0,SCREEN_HEIGHT))
+                self.target = vec2(random.uniform(0,WORLD_WIDTH),random.uniform(0,WORLD_HEIGHT))
                 
     def execute(self, agent):
         # logic to move drone to target
@@ -297,7 +297,7 @@ class SearchTargetState(State):
                 targ = random.choice(self.waypoints)
                 self.target = targ
             else: # random na tela para buscar ja que todas as celulas foram visitadas
-                self.target = vec2(random.uniform(0,SCREEN_WIDTH),random.uniform(0,SCREEN_HEIGHT))
+                self.target = vec2(random.uniform(0,WORLD_WIDTH),random.uniform(0,WORLD_HEIGHT))
 
             #rint(f'EU IRIA PARA A CELULA : {agent.grid_map.get_cell_not_visited()}')
 
@@ -319,8 +319,8 @@ class RandomSearchState(State):
         self.finished = False
 
         # Map resolution
-        self.cols =int(SCREEN_WIDTH/RESOLUTION)  # Columns of the grid
-        self.rows = int(SCREEN_HEIGHT/RESOLUTION)  # Rows of the grid
+        self.cols =int(WORLD_WIDTH/RESOLUTION)  # Columns of the grid
+        self.rows = int(WORLD_HEIGHT/RESOLUTION)  # Rows of the grid
         
         # waypoints to be followed
         self.waypoints = []
@@ -387,7 +387,7 @@ class RandomSearchState(State):
         self.time_executing +=SAMPLE_TIME
             
         if (self.target - agent.location).length() < RADIUS_OBSTACLES*2 :
-            self.target = vec2(random.uniform(0,SCREEN_WIDTH),random.uniform(0,SCREEN_HEIGHT))
+            self.target = vec2(random.uniform(0,WORLD_WIDTH),random.uniform(0,WORLD_HEIGHT))
             #rint(f'EU IRIA PARA A CELULA : {agent.grid_map.get_cell_not_visited()}')
 
         # target is found by a drone in the swarm
