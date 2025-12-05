@@ -6,13 +6,16 @@ A robust, open-source framework for simulating drone swarms in search-and-rescue
 ![Python](https://img.shields.io/badge/python-3.8%2B-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
+![Simulator Screenshot](assets/simulator_screenshot.png)
+
 ## 🎯 Features
 
-- Realistic drone  movement patterns
+- Realistic drone movement patterns
 - Configurable search environments with obstacles
-- Pre-implemented search strategies
+- Pre-implemented search strategies (Row Scan, etc.)
 - State machine-based decision logic for autonomous drone behavior
-- Visualization tools
+- **Optimized Collision Detection** using Quadtree spatial partitioning
+- **Interactive Visualization** with Zoom and Pan capabilities
 - Extensible architecture for implementing custom algorithms
 
 ## 📋 Requirements
@@ -63,22 +66,27 @@ Or install individual components:
 
 ## 🏗️ Project Structure
 
-```
 Search_Drone_Swarms/
 │
-├── 📄 main.py            # Entry point and main simulation loop
-├── 📄 constants.py       # Simulation parameters and configuration
-├── 📄 utils.py           # Helper functions and utilities
+├── 📄 main.py               # Entry point and main simulation loop
+├── 📄 constants.py          # Simulation parameters and configuration
+├── 📄 utils.py              # Helper functions and utilities
 │
-├── 📄 vehicle.py         # Drone physics and movement controllers
-├── 📄 state_machine.py   # Decision-making logic for drones
-├── 📄 scan.py            # Search algorithms and patterns
-├── 📄 grid.py            # Discrete environment representation
-├── 📄 obstacle.py        # Environmental obstacle generation
+├── 📄 vehicle.py            # Drone physics and movement controllers
+├── 📄 state_machine.py      # Decision-making logic for drones
+├── 📄 scan.py               # Search algorithms and patterns (Strategies)
+├── 📄 grid.py               # Discrete environment representation
+├── 📄 obstacle.py           # Environmental obstacle generation
 │
-├── 📁 model/             # Visual assets and drone sprites
-├── 📁 examples/          # Example scenarios and configurations
-└── 📄 requirements.txt   # Project dependencies
+├── 📄 swarm_manager.py      # Manages drone list, updates, and physics
+├── 📄 display_manager.py    # Handles visualization, zoom, and pan
+├── 📄 experiment_manager.py # Manages simulation stats and experiments
+├── 📄 quadtree.py           # Spatial partitioning for optimization
+│
+├── 📁 model/                # Visual assets and drone sprites
+├── 📁 assets/               # Screenshots and other assets
+├── 📁 examples/             # Example scenarios and configurations
+└── 📄 requirements.txt      # Project dependencies
 ```
 
 ## 🎮 Controls & Interface
@@ -87,6 +95,7 @@ Search_Drone_Swarms/
 - **R:** Reset simulation
 - **+/-:** Adjust simulation speed
 - **ESC:** Exit simulator
+- **Mouse Scroll:** Zoom In/Out
 - **Mouse Click:** Place target/obstacle
 
 ## 🔍 Search Strategies
