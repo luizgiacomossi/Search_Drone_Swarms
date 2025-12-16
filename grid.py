@@ -126,6 +126,19 @@ class GridField(object):
                 return (row, col)
         return None  # If no unvisited cell is found
 
+    def get_coverage_percentage(self):
+        """Calculates the percentage of cells that have been visited."""
+        total_cells = (self.rows + 1) * (self.cols + 1)
+        visited_count = 0
+        for r in range(self.rows + 1):
+            for c in range(self.cols + 1):
+                if self.cells[r][c].state == VISITED:
+                    visited_count += 1
+        
+        if total_cells == 0:
+            return 0.0
+        return visited_count / total_cells
+
 
 class Cell():
     '''

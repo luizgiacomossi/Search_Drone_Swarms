@@ -221,6 +221,9 @@ class Simulation(object):
         return target
         
     def rest_simulation(self):
+        # Calculate coverage BEFORE reset
+        coverage = self.grid_field.get_coverage_percentage()
+
         # reset grid 
         self.grid_field = GridField(RESOLUTION)
 
@@ -236,7 +239,8 @@ class Simulation(object):
         time = self.stop_watch - self.start_watch
         if self.time_executing > TIME_MAX_SIMULATION:
             time = "Goal not reached"
-        self.experiment_manager.set_out(time, self.completed_simulation())
+            
+        self.experiment_manager.set_out(time, self.completed_simulation(), coverage)
             
         # Clear swarm via manager
         self.swarm_manager.swarm = []

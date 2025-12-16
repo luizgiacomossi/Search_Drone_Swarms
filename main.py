@@ -13,6 +13,8 @@ from grid import GridField
 import csv
 from datetime import datetime
 import traceback
+import multiprocessing
+from dashboard import run_dashboard
 
 
 class DroneSimulation:
@@ -38,6 +40,18 @@ class DroneSimulation:
             self.display_manager, 
             self.experiment_manager
         )
+        
+        # Dashboard Setup
+        self.stats_queue = multiprocessing.Queue()
+        self.dashboard_process = multiprocessing.Process(
+            target=run_dashboard, 
+            args=(self.stats_queue,)
+        )
+        self.dashboard_process.daemon = True # Ensure it dies if main process dies forcefully
+        self.dashboard_process.start()
+        
+        self.last_dashboard_update = 0
+        self.last_run_index = 0
         
     def _load_background(self):
         """Load and prepare the background image."""
@@ -82,74 +96,83 @@ class DroneSimulation:
         return True
     
     def render_ui(self):
-        """Render UI elements and text."""
-        # App title
-        title = self.display_manager.font24.render(
-            'Swarm Search using Drones', True, LIGHT_BLUE
-        )
-        self.display_manager.screen.blit(title, (20, 20))
+        """Render UI elements and text.
         
-        # Safely get current algorithm
-        try:
-            current_rep = self.simulation.rate.current_repetition
-            alg_count = len(self.simulation.rate.in_algorithms)
-            
-            if alg_count > 0 and current_rep < alg_count:
-                search = self.simulation.rate.in_algorithms[current_rep].to_string()
-            else:
-                search = "Unknown"
-                
-            search_text = self.display_manager.font24.render(
-                f'Search using: {search}', True, LIGHT_BLUE
-            )
-            self.display_manager.screen.blit(search_text, (800, 20))
-        except Exception as e:
-            print(f"Error rendering search algorithm: {e}")
-            # Fallback text if there's an error
-            fallback = self.display_manager.font24.render(
-                'Search algorithm: N/A', True, LIGHT_BLUE
-            )
-            self.display_manager.screen.blit(fallback, (800, 20))
-        
-        # Render mission stats
-        self._render_mission_stats()
+        NOTE: Visual legends and stats have been moved to the separate Dashboard window.
+        This method is kept empty or minimal to keep the view clean.
+        """
+        pass
     
     def _render_mission_stats(self):
-        """Render mission statistics with robust error handling."""
+        """Deprecated: Stats are now in the dashboard."""
+        pass
+
+
+    def _update_dashboard(self):
+        """Sends data to the dashboard process."""
+        current_time = pygame.time.get_ticks()
+        if current_time - self.last_dashboard_update < 100: # Update every 100ms
+            return
+            
+        self.last_dashboard_update = current_time
+        
         try:
-            for idx, time in enumerate(self.simulation.rate.out_time_mission):
+            # Gather data
+            idx = self.experiment_manager.current_repetition
+            alg = "Unknown"
+            if idx < len(self.experiment_manager.in_algorithms):
+                alg = self.experiment_manager.in_algorithms[idx].to_string()
+                
+            swarm_size = self.experiment_manager.in_num_swarm[idx] if idx < len(self.experiment_manager.in_num_swarm) else 0
+            obstacles = self.experiment_manager.in_num_obstacles[idx] if idx < len(self.experiment_manager.in_num_obstacles) else 0
+            
+            # Check for completed run to send history
+            if idx > self.last_run_index:
+                # The previous run (self.last_run_index) has finished
                 try:
-                    # Get algorithm safely with bounds checking
-                    alg_idx = self.simulation.rate.current_repetition
-                    alg_count = len(self.simulation.rate.in_algorithms)
-                    if alg_count > 0 and alg_idx < alg_count:
-                        search = self.simulation.rate.in_algorithms[alg_idx].to_string()
-                    else:
-                        search = "Unknown"
+                    # Get results from the LAST run
+                    # Note: We need to look back at the previous index (last_run_index) to get the correct inputs
+                    prev_idx = self.last_run_index
                     
-                    # Try to get simulation index info safely
-                    try:
-                        sim_idx_info = self.simulation.rate.print_simulation_idx(idx)
-                    except:
-                        sim_idx_info = "N/A"
+                    mission_time = self.experiment_manager.out_time_mission[-1]
                     
-                    text = (
-                        f'{idx+1} - Search: {search} - '
-                        f'Scan Time: {time:.2f}, {sim_idx_info}'
-                    )
-                    img = self.display_manager.font20.render(text, True, LIGHT_BLUE)
-                except:
-                    # Simple fallback text
-                    text = f'{idx+1} - Scan Time: {time:.2f}'
-                    img = self.display_manager.font16.render(text, True, LIGHT_BLUE)
+                    # Safely get inputs for that run
+                    prev_alg = "Unknown"
+                    if prev_idx < len(self.experiment_manager.in_algorithms):
+                        prev_alg = self.experiment_manager.in_algorithms[prev_idx].to_string()
+                        
+                    prev_swarm = self.experiment_manager.in_num_swarm[prev_idx] if prev_idx < len(self.experiment_manager.in_num_swarm) else 0
+                    prev_obst = self.experiment_manager.in_num_obstacles[prev_idx] if prev_idx < len(self.experiment_manager.in_num_obstacles) else 0
                     
-                self.display_manager.screen.blit(img, (20, 20*(idx+2)))
+                    # Get coverage if available
+                    prev_coverage = 0.0
+                    if hasattr(self.experiment_manager, 'out_coverage') and len(self.experiment_manager.out_coverage) > prev_idx:
+                         # The list might store strings if "Goal not reached", but coverage should be float.
+                         # Wait, set_out appends sequentially, so out_coverage[-1] should correspond to this run.
+                         prev_coverage = self.experiment_manager.out_coverage[-1]
+                    
+                    entry = f"Run {prev_idx + 1}: {prev_alg}, {prev_swarm} UAVs, {prev_obst} Obs, Cov: {prev_coverage*100:.1f}%, Time: {mission_time:.2f}s"
+                    
+                    self.stats_queue.put({'history_entry': entry})
+                except IndexError:
+                    pass
+                self.last_run_index = idx
+            
+            data = {
+                'algorithm': alg,
+                'swarm_size': swarm_size,
+                'obstacles': obstacles,
+                'run_index': idx + 1,
+                'time': self.simulation.time_executing,
+                'progress': self.simulation.completed_simulation(),
+                'coverage': self.simulation.grid_field.get_coverage_percentage()
+            }
+            
+            self.stats_queue.put(data)
+            
         except Exception as e:
-            # If even the rendering of mission stats fails
-            print(f"Error rendering mission stats: {e}")
-            img = self.display_manager.font16.render("Error displaying mission stats", True, LIGHT_BLUE)
-            self.display_manager.screen.blit(img, (20, 40))
-    
+            print(f"Dashboard update error: {e}")
+
     def run(self):
         """Main simulation loop with robust error handling."""
         running = True
@@ -170,7 +193,9 @@ class DroneSimulation:
                 if not sim_running:
                     running = False
                 
-    
+                # Update Dashboard
+                self._update_dashboard()
+                
                 # Smart rendering to avoid scaling huge surfaces
                 zoom = self.display_manager.zoom_level
                 offset = self.display_manager.offset
@@ -230,6 +255,11 @@ class DroneSimulation:
             # Try to save whatever data we have
             self._emergency_save_results()
         finally:
+            # Kill Dashboard
+            if self.dashboard_process.is_alive():
+                self.dashboard_process.terminate()
+                self.dashboard_process.join()
+                
             # Always ensure pygame quits properly
             pygame.quit()
     
@@ -318,6 +348,9 @@ class DroneSimulation:
 
 
 if __name__ == "__main__":
+    # Required for multiprocessing on some platforms / freeze support
+    multiprocessing.freeze_support()
+    
     try:
         sim = DroneSimulation()
         sim.run()

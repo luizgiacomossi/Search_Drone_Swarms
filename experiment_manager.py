@@ -27,14 +27,16 @@ class ExperimentManager(object):
         self.out_time_mission = []
         self.out_time_target = []
         self.out_num_uav = []
+        self.out_coverage = []
         self.print_plan_rate()
 
     def set_time_target(self, time_target):
         self.out_time_target.append(time_target)
 
-    def set_out(self, out_time_mission, out_num_uav):
+    def set_out(self, out_time_mission, out_num_uav, coverage=0.0):
         self.out_time_mission.append(out_time_mission)
         self.out_num_uav.append(out_num_uav)
+        self.out_coverage.append(coverage)
 
     def next_simulation(self):
         if self.in_repetitions - 1 == self.current_repetition:
