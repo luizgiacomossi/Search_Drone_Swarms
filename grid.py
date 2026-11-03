@@ -54,8 +54,8 @@ class GridField(object):
                 row = int(y / blockSize)
                 col = int(x / blockSize)
                 self.cells[row][col] = Cell(vec(x, y), blockSize)
-                # Priority queue HEAP: store as (state, (col, row))
-                heapq.heappush(self.h_cells, (self.cells[row][col].state, (col, row)))
+                # Priority queue HEAP: store as (state, row, col) for row-major scan priority
+                heapq.heappush(self.h_cells, (self.cells[row][col].state, row, col))
 
     def _redraw_all(self):
         """Redraws the entire grid onto the cached surface."""
@@ -155,12 +155,13 @@ class GridField(object):
     def get_cell_not_visited(self):
         '''
             This method will return coordinates of a cell that wasn't visited yet: (col, row)
+            Cells are prioritized in row-major order (row 0, row 1, ...) for row scanning.
         '''
         while self.h_cells:
-            _, (col, row) = heapq.heappop(self.h_cells)
-            if 0 <= col <= self.cols and 0 <= row <= self.rows:
-                if self.cells[row][col].state == NOT_VISITED:
-                    return (col, row)
+            _, r, c = heapq.heappop(self.h_cells)
+            if 0 <= c <= self.cols and 0 <= r <= self.rows:
+                if self.cells[r][c].state == NOT_VISITED:
+                    return (c, r)  # Return (col, row) for consistency with (x, y) coordinates
         return None  # If no unvisited cell is found
 
     def get_coverage_percentage(self):
