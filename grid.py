@@ -30,6 +30,18 @@ class GridField(object):
         # Optimization: Create a cached surface for the grid with Colorkey RLE acceleration
         self.surface = pg.Surface((WORLD_WIDTH, WORLD_HEIGHT))
         self.surface.set_colorkey((0, 0, 0), pg.RLEACCEL)
+
+        # Semi-transparent tiles for surveyed area and obstacles
+        tile_size = self.resolution - 2
+        self.visited_tile = pg.Surface((tile_size, tile_size), pg.SRCALPHA)
+        self.visited_tile.fill((0, 230, 90, 52)) # Soft translucent green (alpha ~20%)
+
+        self.obstacle_tile = pg.Surface((tile_size, tile_size), pg.SRCALPHA)
+        self.obstacle_tile.fill((220, 50, 40, 52)) # Soft translucent hazard red
+
+        self.visited_positions = []
+        self.obstacle_positions = []
+
         self._redraw_all()
    
     def create_grid_cells(self):
@@ -57,7 +69,13 @@ class GridField(object):
                 self.cells[int(y/blockSize)][int(x/blockSize)].draw_center(self.surface)
 
     def draw(self, screen):
-        # Blit the cached surface
+        # 1. Blit semi-transparent surveyed tiles directly over background (camouflage visible through tint)
+        for pos in self.visited_positions:
+            screen.blit(self.visited_tile, pos)
+        for pos in self.obstacle_positions:
+            screen.blit(self.obstacle_tile, pos)
+
+        # 2. Blit grid lines and center dots on top with RLE colorkey acceleration
         screen.blit(self.surface, (0, 0))
 
     def change_state_cell(self, cell, to_state = VISITED):
@@ -70,6 +88,12 @@ class GridField(object):
                 c.change_state(to_state)
                 # Update only this cell on the cached surface
                 c.draw_center(self.surface)
+                # Record position for translucent tile overlay
+                tile_pos = (int(c.position[0] + 1), int(c.position[1] + 1))
+                if to_state == VISITED:
+                    self.visited_positions.append(tile_pos)
+                elif to_state == OBSTACLE:
+                    self.obstacle_positions.append(tile_pos)
         except:
             pass
 
@@ -157,13 +181,8 @@ class Cell():
         if self.state == NOT_VISITED:
             pg.draw.circle(screen, (255, 0, 0), center, 3)
         elif self.state == VISITED:
-            # Tactical surveyed area heatmap shading
-            tile_rect = pg.Rect(int(self.position[0] + 1), int(self.position[1] + 1), self.size_block - 2, self.size_block - 2)
-            pg.draw.rect(screen, (30, 80, 42), tile_rect)
             pg.draw.circle(screen, (0, 255, 0), center, 3)
         elif self.state == OBSTACLE:
-            tile_rect = pg.Rect(int(self.position[0] + 1), int(self.position[1] + 1), self.size_block - 2, self.size_block - 2)
-            pg.draw.rect(screen, (60, 25, 25), tile_rect)
             pg.draw.circle(screen, (0, 0, 255), center, 3)
 
     def change_state(self, state = VISITED):
