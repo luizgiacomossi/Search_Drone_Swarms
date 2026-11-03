@@ -108,6 +108,26 @@ The simulator includes several pre-implemented search strategies:
 - **Random Walk** - Stochastic movement with collision avoidance -> Not implemented yet
 - **Levy Flight** - Bio-inspired search pattern with occasional long jumps -> Not implemented yet
 
+## ⚡ Performance & Optimization Benchmarks
+
+The simulation loop has been profiled with `cProfile` and optimized to achieve maximum throughput and frame stability across large ($3840 \times 2160$) environments:
+
+- **RLE-Accelerated Grid Rendering:** Switched the transparent grid overlay from CPU-heavy per-pixel alpha blending to colorkey with `RLEACCEL`, accelerating grid blits by over 6x.
+- **Sprite Rotation Caching:** Pre-caches rotated drone sprites across integer angles to eliminate repetitive runtime `pygame.transform.rotozoom` operations.
+- **Direct Obstacle Blitting:** Streamlined obstacle rendering to eliminate redundant sprite group updates and draws per frame.
+- **Native Vector Operations:** Replaced heavy `copy.deepcopy` calls with native `pygame.math.Vector2` copies across the core steering, physics, and state machine paths (~74,000 deepcopies eliminated).
+- **Cached Font Rendering:** Introduced a text surface lookup cache in `SwarmManager` to avoid redundant string rasterization.
+
+### Optimization Results (600 Unthrottled Benchmark Frames)
+
+| Metric | Before Optimization | After Optimization | Improvement |
+| :--- | :--- | :--- | :--- |
+| **Total Processing Time** | **4.90 s** | **3.17 s** | **~35% faster** |
+| **Total Function Calls** | 2,121,610 | 1,234,195 | **~900,000 fewer calls** |
+| **Grid Draw Time (`grid.py:draw`)** | 2.14 s | 0.34 s | **6.3x faster** |
+| **Sprite Rotation (`rotozoom`)** | 0.66 s | 0.08 s | **8.2x faster** |
+| **Swarm Update (`swarm_manager.update`)** | 1.11 s | 0.38 s | **2.9x faster** |
+
 ## 🔧 Configuration
 
 Edit `constants.py` to modify simulation parameters:

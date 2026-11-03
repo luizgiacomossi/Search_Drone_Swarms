@@ -131,7 +131,7 @@ class SeekState(State):
         # Sampling location every T seconds
         if self.time_executing >=  self.sampling_time:
             self.time_executing = 0 
-            self.memory_last_position = copy.deepcopy(agent.get_position())
+            self.memory_last_position = vec2(agent.get_position())
 
 class GoToClosestDroneState(State):
     """
@@ -308,7 +308,7 @@ class SearchTargetState(State):
         # Sampling location every T seconds
         if self.time_executing >=  self.sampling_time:
             self.time_executing = 0 
-            self.memory_last_position = copy.deepcopy(agent.get_position())
+            self.memory_last_position = vec2(agent.get_position())
  
 class RandomSearchState(State):
     def __init__(self):
@@ -397,7 +397,7 @@ class RandomSearchState(State):
         # Sampling location every T seconds
         if self.time_executing >=  self.sampling_time:
             self.time_executing = 0 
-            self.memory_last_position = copy.deepcopy(agent.get_position())
+            self.memory_last_position = vec2(agent.get_position())
 
  
 

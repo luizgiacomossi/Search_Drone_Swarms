@@ -68,7 +68,7 @@ def limit(v2, max):
         :return v: returns vector 
         :rtype v: vector2
     """
-    v = copy.deepcopy(v2)
+    v = vec(v2)
     if v.length() > max:
         v.scale_to_length(max)
     return v
@@ -84,7 +84,7 @@ def limit3d(v3, max):
         :return v: returns vector 
         :rtype v: vector2
     """
-    v = copy.deepcopy(v3)
+    v = vec(v3)
     if v.length() > max:
         v /= v.length()
         v *= max
@@ -145,6 +145,8 @@ class Aircraft(pg.sprite.Sprite):
         Represents a simple visual animated drone 
         Can load sprites, rotate and update animation
     """
+    _ROTATION_CACHE = {}
+
     def __init__(self):
         pg.sprite.Sprite.__init__(self)
         self.sprites = []
@@ -190,11 +192,17 @@ class Aircraft(pg.sprite.Sprite):
         if self.atual >= len(self.sprites):
             self.atual = 0
 
-        self.image = self.sprites[floor(self.atual)]
-    
-        # Rotates image -> angle should be in degrees
-        # rotozoom(Surface, angle, scale) -> Surface
-        self.image = pg.transform.rotozoom(self.image, -angle*180/pi - 90, .12)
+        sprite_idx = floor(self.atual)
+        deg = int(round(-angle * 180 / pi - 90)) % 360
+        cache_key = (sprite_idx, deg)
+        if cache_key in Aircraft._ROTATION_CACHE:
+            self.image = Aircraft._ROTATION_CACHE[cache_key]
+        else:
+            base_sprite = self.sprites[sprite_idx]
+            rotated = pg.transform.rotozoom(base_sprite, deg, .12)
+            Aircraft._ROTATION_CACHE[cache_key] = rotated
+            self.image = rotated
+
         self.rect = self.image.get_rect()
         # positions center of rect in acual drone position
         self.rect.center = position.x,position.y

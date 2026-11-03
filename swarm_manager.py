@@ -13,6 +13,7 @@ class SwarmManager:
         self.swarm: List[Vehicle] = []
         self.behaviors = []
         self.display_manager = display_manager
+        self._text_cache = {}
 
     def create_swarm(self, num_swarm, search_pattern='DefineTargetScan'):
         self.swarm = []
@@ -99,6 +100,14 @@ class SwarmManager:
         row = int(p.y / RESOLUTION)
         return col, row
 
+    def _get_rendered_text(self, font, text: str, color):
+        key = (id(font), text, color)
+        surf = self._text_cache.get(key)
+        if surf is None:
+            surf = font.render(text, True, color)
+            self._text_cache[key] = surf
+        return surf
+
     def _draw_legend(self, drone, index) -> None:
         """Draws information text beneath the drone."""
         position = drone.get_position()
@@ -107,14 +116,14 @@ class SwarmManager:
         font16 = self.display_manager.font16
         
         # Drone ID
-        drone_id_text = font20.render(f'Drone {index+1}', True, LIGHT_BLUE)
+        drone_id_text = self._get_rendered_text(font20, f'Drone {index+1}', LIGHT_BLUE)
         screen.blit(drone_id_text, position + (0, 20))
         
         # Current behavior
-        behavior_text = font16.render(drone.behavior.get_current_state(), True, LIGHT_BLUE)
+        behavior_text = self._get_rendered_text(font16, drone.behavior.get_current_state(), LIGHT_BLUE)
         screen.blit(behavior_text, position + (0, 30))
         
         # Current grid position
         col, row = self._get_grid_position(drone)
-        pos_text = font16.render(f'Pos:{col},{row}', True, LIGHT_BLUE)
+        pos_text = self._get_rendered_text(font16, f'Pos:{col},{row}', LIGHT_BLUE)
         screen.blit(pos_text, position + (0, 40))

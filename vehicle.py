@@ -176,9 +176,9 @@ class Vehicle(object):
         d = self.desired.magnitude() 
 
         try:
-            dist = copy.deepcopy(self.desired.normalize()) # obtem direção
+            dist = self.desired.normalize() # obtem direção
         except: # If the magnitude of desired is zero it cant be normalized
-            dist = copy.deepcopy(self.desired)
+            dist = vec2(self.desired)
         
         r = RADIUS_TARGET
         # Modulates the force
@@ -421,7 +421,7 @@ class Vehicle(object):
             # Find closest drone
             if 0 < d < closest:
                 closest = d
-                self.closest_drone = copy.deepcopy(p.location)
+                self.closest_drone = vec2(p.location)
             
             # Collision prevention
             if d < search_radius:

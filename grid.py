@@ -27,8 +27,9 @@ class GridField(object):
 
         self.create_grid_cells()
         
-        # Optimization: Create a cached surface for the grid
-        self.surface = pg.Surface((WORLD_WIDTH, WORLD_HEIGHT), pg.SRCALPHA)
+        # Optimization: Create a cached surface for the grid with Colorkey RLE acceleration
+        self.surface = pg.Surface((WORLD_WIDTH, WORLD_HEIGHT))
+        self.surface.set_colorkey((0, 0, 0), pg.RLEACCEL)
         self._redraw_all()
    
     def create_grid_cells(self):
@@ -47,7 +48,7 @@ class GridField(object):
     def _redraw_all(self):
         """Redraws the entire grid onto the cached surface."""
         blockSize = self.resolution
-        self.surface.fill((0, 0, 0, 0)) # Clear with transparent
+        self.surface.fill((0, 0, 0)) # Clear transparent background
         
         for x in range(0, WORLD_WIDTH, blockSize):
             for y in range(0, WORLD_HEIGHT, blockSize):

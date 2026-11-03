@@ -133,12 +133,19 @@ class Simulation(object):
         self.table_search = table_search
       
     def draw_obstacles(self):
-        # draws the sprites of tree
-        for _ in self.list_obst: 
-            self.obstacles.all_sprites.draw(self.display_manager.world_surface)
-            self.obstacles.all_sprites.update(_,0)
-            pygame.draw.circle(self.display_manager.world_surface,(200, 200, 200), _, radius=RADIUS_OBSTACLES, width=1)
-            pygame.draw.circle(self.display_manager.world_surface,(200, 200, 200), _, radius=RADIUS_OBSTACLES*1.6 + AVOID_DISTANCE, width=1)
+        # draws the sprites of tree and avoidance circles
+        surface = self.display_manager.world_surface
+        tree_img = self.obstacles.tree.image
+        tree_rect = self.obstacles.tree.rect
+        r1 = RADIUS_OBSTACLES
+        r2 = RADIUS_OBSTACLES * 1.6 + AVOID_DISTANCE
+        color = (200, 200, 200)
+
+        for obst_pos in self.list_obst:
+            tree_rect.midbottom = (obst_pos.x, obst_pos.y + 20)
+            surface.blit(tree_img, tree_rect)
+            pygame.draw.circle(surface, color, obst_pos, radius=r1, width=1)
+            pygame.draw.circle(surface, color, obst_pos, radius=r2, width=1)
 
     def draw_target(self):
         # draw target - npc
