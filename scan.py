@@ -88,12 +88,15 @@ class RowScan(ScanInterface):
             drone.direction = 1  # 1 = left-to-right, -1 = right-to-left
             drone.current_col = 0
             
-            # Set initial target at start of drone's row
+            # Set initial fixed waypoint at start of drone's row
             cell_center = simulation.grid_field.cells[r_start][0].get_cell_center()
             target_pos = pygame.math.Vector2(cell_center[0], cell_center[1])
+            drone.current_waypoint = pygame.math.Vector2(target_pos)
             drone.set_target(target_pos)
             drone.mission_target = pygame.math.Vector2(target_pos)
             drone.set_position_in_grid(0, r_start)
+            if hasattr(drone, 'behavior') and hasattr(drone.behavior, 'state'):
+                drone.behavior.state.target = pygame.math.Vector2(target_pos)
 
     def scan(self, simulation, list_obst) -> None:
         """Execute the row scanning algorithm.
@@ -108,62 +111,88 @@ class RowScan(ScanInterface):
         rows = simulation.grid_field.rows
         
         for drone in simulation.swarm:
-            # Check if drone reached current target waypoint or needs a target
-            target = getattr(drone, 'target', None)
-            reached = False
-            if target is None:
-                reached = True
-            elif hasattr(drone, 'reached_goal') and drone.reached_goal(target):
-                reached = True
-            elif (drone.location - target).length() < 35:
-                reached = True
-                
-            if reached:
-                # Ensure row scanning state attributes exist on drone
-                if not hasattr(drone, 'row_start'):
-                    drone.row_start = 0
-                    drone.row_end = rows
-                    drone.current_row = 0
-                    drone.direction = 1
-                    drone.current_col = 0
+            # Ensure row scanning state attributes exist on drone
+            if not hasattr(drone, 'row_start'):
+                drone.row_start = 0
+                drone.row_end = rows
+                drone.current_row = 0
+                drone.direction = 1
+                drone.current_col = 0
 
-                # Advance column in current direction
-                next_col = drone.current_col + drone.direction
+            # Ensure current_waypoint is initialized
+            if not hasattr(drone, 'current_waypoint') or drone.current_waypoint is None:
+                r = max(0, min(drone.current_row, rows))
+                c = max(0, min(drone.current_col, cols))
+                cell_center = simulation.grid_field.cells[r][c].get_cell_center()
+                drone.current_waypoint = pygame.math.Vector2(cell_center[0], cell_center[1])
+                drone.set_target(drone.current_waypoint)
+                drone.mission_target = pygame.math.Vector2(drone.current_waypoint)
+                if hasattr(drone, 'behavior') and hasattr(drone.behavior, 'state'):
+                    drone.behavior.state.target = pygame.math.Vector2(drone.current_waypoint)
+                continue
+
+            # Check if drone reached the fixed waypoint
+            # (must be within 25 pixels, i.e., half-cell resolution)
+            dist = (drone.location - drone.current_waypoint).length()
+            
+            # Check if drone is blocked by an obstacle near this waypoint
+            is_blocked = False
+            if hasattr(drone, 'behavior') and hasattr(drone.behavior, 'state'):
+                if getattr(drone.behavior.state, 'time_blocked', 0) > 1.5:
+                    is_blocked = True
+                    drone.behavior.state.time_blocked = 0
+
+            if dist > 25 and not is_blocked:
+                # Drone is still travelling towards the fixed waypoint.
+                # Do NOT advance. Ensure the steering behavior remains locked to this waypoint.
+                if hasattr(drone, 'behavior') and hasattr(drone.behavior, 'state'):
+                    drone.behavior.state.target = pygame.math.Vector2(drone.current_waypoint)
+                continue
+
+            # Drone physically reached the fixed waypoint!
+            # Mark cell as checked / visited
+            simulation.grid_field.change_state_cell((drone.current_col, drone.current_row))
+
+            # Advance to next cell in the row
+            next_col = drone.current_col + drone.direction
+            
+            # Check if end of row is reached
+            if next_col > cols or next_col < 0:
+                # Move to next row within this drone's assigned corridor
+                drone.current_row += 1
+                if drone.current_row > drone.row_end:
+                    # Completed all assigned rows; loop back to start of corridor
+                    drone.current_row = drone.row_start
                 
-                # Check if end of row is reached
-                if next_col > cols or next_col < 0:
-                    # Move to next row within this drone's assigned corridor
-                    drone.current_row += 1
-                    if drone.current_row > drone.row_end:
-                        # Completed all assigned rows; loop back to start of corridor
-                        drone.current_row = drone.row_start
-                    
-                    # Reverse horizontal direction
-                    drone.direction *= -1
-                    next_col = 0 if drone.direction == 1 else cols
-                
+                # Reverse horizontal direction
+                drone.direction *= -1
+                next_col = 0 if drone.direction == 1 else cols
+            
+            r = max(0, min(drone.current_row, rows))
+            next_col = max(0, min(next_col, cols))
+            
+            # If obstacle ahead in this cell, skip along row to find next clear cell
+            while 0 <= next_col <= cols and simulation.grid_field.cells[r][next_col].state == 2:  # 2 is OBSTACLE
+                next_col += drone.direction
+            
+            # If skipping went out of bounds, wrap to next row
+            if next_col > cols or next_col < 0:
+                drone.current_row += 1
+                if drone.current_row > drone.row_end:
+                    drone.current_row = drone.row_start
+                drone.direction *= -1
+                next_col = 0 if drone.direction == 1 else cols
                 r = max(0, min(drone.current_row, rows))
                 next_col = max(0, min(next_col, cols))
-                
-                # If obstacle ahead in this cell, skip along row to find next clear cell
-                while 0 <= next_col <= cols and simulation.grid_field.cells[r][next_col].state == 2:  # 2 is OBSTACLE
-                    next_col += drone.direction
-                
-                # If skipping went out of bounds, wrap to next row
-                if next_col > cols or next_col < 0:
-                    drone.current_row += 1
-                    if drone.current_row > drone.row_end:
-                        drone.current_row = drone.row_start
-                    drone.direction *= -1
-                    next_col = 0 if drone.direction == 1 else cols
-                    r = max(0, min(drone.current_row, rows))
-                    next_col = max(0, min(next_col, cols))
-                
-                drone.current_col = next_col
-                cell_center = simulation.grid_field.cells[r][drone.current_col].get_cell_center()
-                next_target = pygame.math.Vector2(cell_center[0], cell_center[1])
-                drone.set_target(next_target)
-                drone.mission_target = pygame.math.Vector2(next_target)
+            
+            drone.current_col = next_col
+            cell_center = simulation.grid_field.cells[r][drone.current_col].get_cell_center()
+            next_waypoint = pygame.math.Vector2(cell_center[0], cell_center[1])
+            drone.current_waypoint = next_waypoint
+            drone.set_target(next_waypoint)
+            drone.mission_target = pygame.math.Vector2(next_waypoint)
+            if hasattr(drone, 'behavior') and hasattr(drone.behavior, 'state'):
+                drone.behavior.state.target = pygame.math.Vector2(next_waypoint)
 
 
 class RandoWalkScan(ScanInterface):
