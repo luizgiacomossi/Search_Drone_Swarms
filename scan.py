@@ -55,7 +55,7 @@ class DefineTargetScan(ScanInterface):
 
 
 class RowScan(ScanInterface):
-    """Row-based scanning strategy."""
+    """Row-based scanning strategy (parallel lawnmower/boustrophedon pattern)."""
     
     def to_string(self) -> str:
         return 'RowScan'
@@ -67,7 +67,33 @@ class RowScan(ScanInterface):
             simulation: The current simulation
             target: The target position
         """
-        simulation.set_target_using_search_pattern(target)
+        simulation.target_simulation = target
+        num_drones = len(simulation.swarm)
+        if num_drones == 0:
+            return
+            
+        rows = simulation.grid_field.rows
+        cols = simulation.grid_field.cols
+        
+        # Divide rows evenly across all drones in the swarm
+        step = (rows + 1) / num_drones
+        for i, drone in enumerate(simulation.swarm):
+            r_start = int(round(i * step))
+            r_end = int(round((i + 1) * step)) - 1
+            r_end = max(r_start, min(r_end, rows))
+            
+            drone.row_start = r_start
+            drone.row_end = r_end
+            drone.current_row = r_start
+            drone.direction = 1  # 1 = left-to-right, -1 = right-to-left
+            drone.current_col = 0
+            
+            # Set initial target at start of drone's row
+            cell_center = simulation.grid_field.cells[r_start][0].get_cell_center()
+            target_pos = pygame.math.Vector2(cell_center[0], cell_center[1])
+            drone.set_target(target_pos)
+            drone.mission_target = pygame.math.Vector2(target_pos)
+            drone.set_position_in_grid(0, r_start)
 
     def scan(self, simulation, list_obst) -> None:
         """Execute the row scanning algorithm.
@@ -76,12 +102,68 @@ class RowScan(ScanInterface):
             simulation: The current simulation
             list_obst: List of obstacles
         """
-        # Delegate the update loop to the swarm manager
         simulation.swarm_manager.update(simulation, list_obst)
+        
+        cols = simulation.grid_field.cols
+        rows = simulation.grid_field.rows
+        
+        for drone in simulation.swarm:
+            # Check if drone reached current target waypoint or needs a target
+            target = getattr(drone, 'target', None)
+            reached = False
+            if target is None:
+                reached = True
+            elif hasattr(drone, 'reached_goal') and drone.reached_goal(target):
+                reached = True
+            elif (drone.location - target).length() < 35:
+                reached = True
+                
+            if reached:
+                # Ensure row scanning state attributes exist on drone
+                if not hasattr(drone, 'row_start'):
+                    drone.row_start = 0
+                    drone.row_end = rows
+                    drone.current_row = 0
+                    drone.direction = 1
+                    drone.current_col = 0
 
-    def define_search_area(self) -> None:
-        """Define the area to be searched."""
-        pass
+                # Advance column in current direction
+                next_col = drone.current_col + drone.direction
+                
+                # Check if end of row is reached
+                if next_col > cols or next_col < 0:
+                    # Move to next row within this drone's assigned corridor
+                    drone.current_row += 1
+                    if drone.current_row > drone.row_end:
+                        # Completed all assigned rows; loop back to start of corridor
+                        drone.current_row = drone.row_start
+                    
+                    # Reverse horizontal direction
+                    drone.direction *= -1
+                    next_col = 0 if drone.direction == 1 else cols
+                
+                r = max(0, min(drone.current_row, rows))
+                next_col = max(0, min(next_col, cols))
+                
+                # If obstacle ahead in this cell, skip along row to find next clear cell
+                while 0 <= next_col <= cols and simulation.grid_field.cells[r][next_col].state == 2:  # 2 is OBSTACLE
+                    next_col += drone.direction
+                
+                # If skipping went out of bounds, wrap to next row
+                if next_col > cols or next_col < 0:
+                    drone.current_row += 1
+                    if drone.current_row > drone.row_end:
+                        drone.current_row = drone.row_start
+                    drone.direction *= -1
+                    next_col = 0 if drone.direction == 1 else cols
+                    r = max(0, min(drone.current_row, rows))
+                    next_col = max(0, min(next_col, cols))
+                
+                drone.current_col = next_col
+                cell_center = simulation.grid_field.cells[r][drone.current_col].get_cell_center()
+                next_target = pygame.math.Vector2(cell_center[0], cell_center[1])
+                drone.set_target(next_target)
+                drone.mission_target = pygame.math.Vector2(next_target)
 
 
 class RandoWalkScan(ScanInterface):

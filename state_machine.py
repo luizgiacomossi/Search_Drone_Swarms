@@ -266,7 +266,7 @@ class SearchTargetState(State):
             if self.time_blocked > 2:
                 self.time_blocked = 0
                 if getattr(agent, 'grid_map', None) is not None:
-                    unvisited = agent.grid_map.get_cell_not_visited()
+                    unvisited = agent.grid_map.get_cell_not_visited(getattr(agent, 'position_in_grid', None))
                     if unvisited is not None:
                         center = agent.grid_map.get_cell_center(unvisited)
                         self.target = vec2(center[0], center[1])
@@ -292,7 +292,7 @@ class SearchTargetState(State):
                     targ = random.choice(self.waypoints)
                     self.target = vec2(targ[0], targ[1])
                 else:
-                    unvisited = agent.grid_map.get_cell_not_visited()
+                    unvisited = agent.grid_map.get_cell_not_visited(getattr(agent, 'position_in_grid', None))
                     if unvisited is not None:
                         center = agent.grid_map.get_cell_center(unvisited)
                         self.target = vec2(center[0], center[1])

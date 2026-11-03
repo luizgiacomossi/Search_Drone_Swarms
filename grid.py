@@ -152,11 +152,25 @@ class GridField(object):
         row = max(0, min(int(cell[1]), self.rows))
         return self.cells[row][col].get_cell_center()   
     
-    def get_cell_not_visited(self):
+    def get_cell_not_visited(self, near_cell=None):
         '''
             This method will return coordinates of a cell that wasn't visited yet: (col, row)
-            Cells are prioritized in row-major order (row 0, row 1, ...) for row scanning.
+            If near_cell is provided, finds the closest unvisited cell to maintain locality.
         '''
+        if near_cell is not None:
+            col, row = int(near_cell[0]), int(near_cell[1])
+            best_cell = None
+            min_dist_sq = float('inf')
+            for r in range(self.rows + 1):
+                for c in range(self.cols + 1):
+                    if self.cells[r][c].state == NOT_VISITED:
+                        d_sq = (c - col) ** 2 + (r - row) ** 2
+                        if d_sq < min_dist_sq:
+                            min_dist_sq = d_sq
+                            best_cell = (c, r)
+            if best_cell is not None:
+                return best_cell
+
         while self.h_cells:
             _, r, c = heapq.heappop(self.h_cells)
             if 0 <= c <= self.cols and 0 <= r <= self.rows:
