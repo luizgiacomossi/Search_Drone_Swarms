@@ -72,20 +72,27 @@ class Vehicle(object):
         #self.acceleration += force/MASS
 
     def update(self):
-        # adds drag force
+        """
+        Euler numerical integration step using fixed discrete time-step dt = 1.0 tick
+        (where 1 tick = SAMPLE_TIME = 1/FREQUENCY seconds).
+        """
+        # Aerodynamic drag force
         self.apply_drag()
-        # updates behavior in machine state
+        # Updates behavior in state machine
         self.behavior.update(self)
-        # Updates velocity at every step and limits it to max_speed
-        self.velocity += self.acceleration * 1
+
+        # Fixed time-step integration (dt = 1.0 frame tick)
+        dt = 1.0
+        self.velocity += self.acceleration * dt
         self.velocity = limit(self.velocity, self.max_speed)
-        # updates position
-        self.location += self.velocity
-        # Prevents it from crazy spinning due to very low noise speeds
+        self.location += self.velocity * dt
+
+        # Prevents erratic rotation at near-zero velocities
         if self.velocity.length() > 0.8:
-            self.rotation = atan2(self.velocity.y,self.velocity.x)
-        # Constrains position to limits of screen
-        self.location = constrain(self.location,WORLD_WIDTH,WORLD_HEIGHT)
+            self.rotation = atan2(self.velocity.y, self.velocity.x)
+
+        # Constrains position to world boundaries
+        self.location = constrain(self.location, WORLD_WIDTH, WORLD_HEIGHT)
         self.acceleration *= 0
 
         # Memory of positions to draw Track
@@ -98,14 +105,17 @@ class Vehicle(object):
         """
         Applies aerodynamic drag force to the drone.
         """
+        speed_squared = self.velocity.length_squared()
+        if speed_squared < 0.0001:
+            return
+
         drag_coefficient = 0.5  # Adjust this value
         area = 0.1  # Approximate frontal area (adjust this)
         air_density = 1.225  # kg/m^3 (sea level)
 
-        speed_squared = self.velocity.length_squared() # Avoid square root
-
+        speed = speed_squared ** 0.5
         drag_magnitude = 0.5 * air_density * area * drag_coefficient * speed_squared
-        drag_direction = -self.velocity.normalize()
+        drag_direction = -self.velocity / speed
 
         drag_force = drag_direction * drag_magnitude
         self.applyForce(drag_force)
