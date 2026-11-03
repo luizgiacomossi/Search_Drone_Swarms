@@ -152,14 +152,19 @@ class Cell():
         self.state = NOT_VISITED
         self.center_in_coord_global = vec(self.position[0]+ self.size_block/2, self.position[1]+ self.size_block/2)
 
-    def draw_center(self,screen):
-        
+    def draw_center(self, screen):
+        center = vec(self.position[0] + self.size_block / 2, self.position[1] + self.size_block / 2)
         if self.state == NOT_VISITED:
-            pg.draw.circle(screen, (255,0,0), vec(self.position[0]+ self.size_block/2, self.position[1]+ self.size_block/2), 3)
-        if self.state == VISITED: 
-            pg.draw.circle(screen, (0,255,0), vec(self.position[0]+ self.size_block/2, self.position[1]+ self.size_block/2), 3)
-        if self.state == OBSTACLE:
-            pg.draw.circle(screen, (0,0,255), vec(self.position[0]+ self.size_block/2, self.position[1]+ self.size_block/2), 3)
+            pg.draw.circle(screen, (255, 0, 0), center, 3)
+        elif self.state == VISITED:
+            # Tactical surveyed area heatmap shading
+            tile_rect = pg.Rect(int(self.position[0] + 1), int(self.position[1] + 1), self.size_block - 2, self.size_block - 2)
+            pg.draw.rect(screen, (30, 80, 42), tile_rect)
+            pg.draw.circle(screen, (0, 255, 0), center, 3)
+        elif self.state == OBSTACLE:
+            tile_rect = pg.Rect(int(self.position[0] + 1), int(self.position[1] + 1), self.size_block - 2, self.size_block - 2)
+            pg.draw.rect(screen, (60, 25, 25), tile_rect)
+            pg.draw.circle(screen, (0, 0, 255), center, 3)
 
     def change_state(self, state = VISITED):
         if self.state != OBSTACLE:

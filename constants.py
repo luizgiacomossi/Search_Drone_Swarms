@@ -11,8 +11,9 @@ M2PIX = 100.0  # factor to convert from meters to pixels
 
 NUM_DRONES = 10 # Number of simultaneous drones
 SIZE_DRONE = 18
+SENSOR_RANGE = 75 # Drone sensor footprint radius
 
-SIZE_TRACK = 1
+SIZE_TRACK = 25 # Length of drone fading flight trail
 RESOLUTION = 50 # Of grid
 NUM_OBSTACLES = 30
 RADIUS_OBSTACLES = 40

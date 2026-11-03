@@ -12,6 +12,17 @@ from quadtree import Quadtree, Rect
 vec2 = pg.math.Vector2
 
 class Vehicle(object):
+    _SENSOR_SURF = None
+
+    @classmethod
+    def _get_sensor_surface(cls):
+        if cls._SENSOR_SURF is None:
+            r = SENSOR_RANGE
+            surf = pg.Surface((r * 2, r * 2), pg.SRCALPHA)
+            pg.draw.circle(surf, (0, 210, 255, 22), (r, r), r)
+            pg.draw.circle(surf, (0, 210, 255, 75), (r, r), r, 1)
+            cls._SENSOR_SURF = surf
+        return cls._SENSOR_SURF
 
     def __init__(self, x,y, behavior, window):
         """
@@ -375,29 +386,41 @@ class Vehicle(object):
             self.applyForce(steer)
                   
     def draw(self, window):
-
         """
-        Render drone with optional debug visualization.
+        Render drone with sensor footprint, fading flight trails, and optional debug visualization.
         
         Args:
             window: Pygame window surface
         """
-        # Draw connection to closest drone
+        # 1. Render semi-transparent sensor footprint (FoV)
+        sensor_surf = self._get_sensor_surface()
+        self.window.blit(sensor_surf, self.location - vec2(SENSOR_RANGE, SENSOR_RANGE))
+
+        # 2. Draw connection to closest drone
         if self.closest_drone:
             pg.draw.line(self.window, self.color_target, self.location, self.closest_drone, 1)
 
-        # Render drone track
-        if len(self.memory_location) >= 2:
-            pg.draw.lines(self.window, self.color_target, False, self.memory_location, 1)
+        # 3. Render fading drone flight trail
+        n_points = len(self.memory_location)
+        if n_points >= 2:
+            for i in range(n_points - 1):
+                factor = 0.15 + 0.85 * ((i + 1) / n_points)
+                seg_color = (
+                    int(self.color_target[0] * factor),
+                    int(self.color_target[1] * factor),
+                    int(self.color_target[2] * factor)
+                )
+                width = 2 if i >= n_points - 6 else 1
+                pg.draw.line(self.window, seg_color, self.memory_location[i], self.memory_location[i+1], width)
 
-        # Debug visualization
+        # 4. Debug visualization
         if self.debug:
             pg.draw.circle(self.window, (100, 100, 100), self.location, AVOID_DISTANCE, 1)
             v = self.velocity.length()
             pg.draw.line(self.window, self.color_target, self.location, 
                          self.location + self.velocity.normalize() * v * 20, 1)
 
-        # Render sprite
+        # 5. Render aircraft sprite
         self.all_sprites.draw(self.window)
         self.all_sprites.update(self.location, self.rotation)
 
