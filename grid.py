@@ -54,8 +54,8 @@ class GridField(object):
                 row = int(y / blockSize)
                 col = int(x / blockSize)
                 self.cells[row][col] = Cell(vec(x, y), blockSize)
-                # Priority queue HEAP
-                heapq.heappush(self.h_cells, (self.cells[row][col].state, (row, col)))
+                # Priority queue HEAP: store as (state, (col, row))
+                heapq.heappush(self.h_cells, (self.cells[row][col].state, (col, row)))
 
     def _redraw_all(self):
         """Redraws the entire grid onto the cached surface."""
@@ -80,10 +80,15 @@ class GridField(object):
 
     def change_state_cell(self, cell, to_state = VISITED):
         '''
-            Cell is visitated
+            Cell is visited
+            cell: (col, row)
         '''
         try:
-            c = self.cells[cell[1]][cell[0]]
+            col = int(cell[0])
+            row = int(cell[1])
+            if not (0 <= col <= self.cols and 0 <= row <= self.rows):
+                return
+            c = self.cells[row][col]
             if c.state != to_state and c.state != OBSTACLE:
                 c.change_state(to_state)
                 # Update only this cell on the cached surface
@@ -94,18 +99,22 @@ class GridField(object):
                     self.visited_positions.append(tile_pos)
                 elif to_state == OBSTACLE:
                     self.obstacle_positions.append(tile_pos)
-        except:
+        except Exception:
             pass
 
     def get_state_cell(self, cell):
         '''
-            Get if cell was visisted before
-            cell: tuple with coordenates
+            Get if cell was visited before
+            cell: tuple with coordinates (col, row)
             return: state of the cell 
         '''
         try:
-            return self.cells[cell[1]][cell[0]].state
-        except:
+            col = int(cell[0])
+            row = int(cell[1])
+            if 0 <= col <= self.cols and 0 <= row <= self.rows:
+                return self.cells[row][col].state
+            return VISITED
+        except Exception:
             return VISITED
 
     def get_sucessors(self,cell):
@@ -138,17 +147,20 @@ class GridField(object):
         '''
         return (self.cols, self.rows)
 
-    def get_cell_center(self,cell):
-        return self.cells[cell[1]][cell[0]].get_cell_center()   
+    def get_cell_center(self, cell):
+        col = max(0, min(int(cell[0]), self.cols))
+        row = max(0, min(int(cell[1]), self.rows))
+        return self.cells[row][col].get_cell_center()   
     
     def get_cell_not_visited(self):
         '''
-            This method will return coordinates of a cell that wasn't visited yet
+            This method will return coordinates of a cell that wasn't visited yet: (col, row)
         '''
         while self.h_cells:
-            state, (row, col) = heapq.heappop(self.h_cells)
-            if state == NOT_VISITED:
-                return (row, col)
+            _, (col, row) = heapq.heappop(self.h_cells)
+            if 0 <= col <= self.cols and 0 <= row <= self.rows:
+                if self.cells[row][col].state == NOT_VISITED:
+                    return (col, row)
         return None  # If no unvisited cell is found
 
     def get_coverage_percentage(self):
