@@ -21,8 +21,8 @@ class DisplayManager(object):
         self.min_zoom = min(SCREEN_WIDTH / WORLD_WIDTH, SCREEN_HEIGHT / WORLD_HEIGHT)
         self.max_zoom = 5.0
         
-        # World surface to draw everything on before scaling
-        self.world_surface = pygame.Surface((WORLD_WIDTH, WORLD_HEIGHT))
+        # World surface to draw everything on before scaling (opaque 24-bit canvas)
+        self.world_surface = pygame.Surface((WORLD_WIDTH, WORLD_HEIGHT), depth=24)
 
     def handle_zoom(self, event):
         if event.type == pygame.MOUSEWHEEL:

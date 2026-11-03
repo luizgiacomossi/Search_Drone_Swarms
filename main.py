@@ -151,12 +151,19 @@ class DroneSimulation:
                          # Wait, set_out appends sequentially, so out_coverage[-1] should correspond to this run.
                          prev_coverage = self.experiment_manager.out_coverage[-1]
                     
-                    entry = f"Run {prev_idx + 1}: {prev_alg}, {prev_swarm} UAVs, {prev_obst} Obs, Cov: {prev_coverage*100:.1f}%, Time: {mission_time:.2f}s"
+                    # Format time safely (it can be float seconds or string "Goal not reached")
+                    if isinstance(mission_time, (int, float)):
+                        time_str = f"{mission_time:.2f}s"
+                    else:
+                        time_str = str(mission_time)
+                    
+                    entry = f"Run {prev_idx + 1}: {prev_alg}, {prev_swarm} UAVs, {prev_obst} Obs, Cov: {prev_coverage*100:.1f}%, Time: {time_str}"
                     
                     self.stats_queue.put({'history_entry': entry})
-                except IndexError:
-                    pass
-                self.last_run_index = idx
+                except (IndexError, Exception) as run_err:
+                    print(f"Error compiling run history: {run_err}")
+                finally:
+                    self.last_run_index = idx
             
             data = {
                 'algorithm': alg,
@@ -223,6 +230,7 @@ class DroneSimulation:
                         try:
                             subsurf = self.display_manager.world_surface.subsurface(pygame.Rect(wx, wy, ww, wh))
                             scaled_surf = pygame.transform.scale(subsurf, (int(ww * zoom), int(wh * zoom)))
+                            scaled_surf.set_alpha(None)
                             self.display_manager.screen.blit(scaled_surf, (0, 0))
                         except Exception as e:
                             # Fallback if subsurface fails (e.g. out of bounds due to float precision)
@@ -235,6 +243,7 @@ class DroneSimulation:
                         (int(WORLD_WIDTH * zoom), 
                          int(WORLD_HEIGHT * zoom))
                     )
+                    scaled_surface.set_alpha(None)
                     self.display_manager.screen.blit(scaled_surface, offset)
 
                 # Render UI elements (on top of everything, not zoomed)

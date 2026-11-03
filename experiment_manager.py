@@ -54,10 +54,9 @@ class ExperimentManager(object):
         return f'{self.current_repetition+1} - num_swarm: {self.in_num_swarm[self.current_repetition]}, num_obstacles: {self.in_num_obstacles[self.current_repetition]}, Algorithm: {self.in_algorithms[self.current_repetition].to_string()}'
 
     def print_simulation_idx(self, idx):
-        # Note: 'time' variable was used in original code but not defined in method scope. 
-        # Assuming it refers to mission time which is in out_time_mission
         mission_time = self.out_time_mission[idx] if idx < len(self.out_time_mission) else 0.0
-        return f'{idx+1} - Time: {mission_time:.2f}, num_uav: {self.out_num_uav[idx]}, num_swarm: {self.in_num_swarm[idx]}, num_obstacles: {self.in_num_obstacles[idx]}'
+        time_str = f"{mission_time:.2f}" if isinstance(mission_time, (int, float)) else str(mission_time)
+        return f'{idx+1} - Time: {time_str}, num_uav: {self.out_num_uav[idx]}, num_swarm: {self.in_num_swarm[idx]}, num_obstacles: {self.in_num_obstacles[idx]}'
 
     def print_rate(self):
         num_d = []
